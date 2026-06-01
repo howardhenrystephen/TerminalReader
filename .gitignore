@@ -1,0 +1,58 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Go vendor directory
+vendor/
+
+# Go workspace file
+go.work
+
+# Binary output
+reader
+
+# Database & data files
+data/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Log files
+log/
+*.log
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Markdown
+tech-spec.md
