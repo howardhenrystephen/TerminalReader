@@ -1,0 +1,46 @@
+package db
+
+import "time"
+
+// Book 表示一本书的元信息
+type Book struct {
+	ID             int64
+	Title          string
+	Author         string
+	Description    string
+	TotalChapters  int
+	CurrentChapter int
+	CurrentOffset  int
+	SourceURL      string
+	SourceSite     string
+	Pinned         bool
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
+}
+
+// Chapter 表示单章内容
+type Chapter struct {
+	ID         int64
+	ChapterNum int
+	Title      string
+	Content    string
+	WordCount  int
+	CreatedAt  time.Time
+}
+
+// SearchResult 表示搜索返回的结果
+type SearchResult struct {
+	SourceName string
+	SourceURL  string
+	BookTitle  string
+	Author     string
+	Available  bool
+	Error      error
+}
+
+// CrawlTask 表示一次爬取任务
+type CrawlTask struct {
+	BookID     int64
+	SourceURL  string
+	SourceSite string
+}
