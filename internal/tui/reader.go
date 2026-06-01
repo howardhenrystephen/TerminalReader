@@ -179,6 +179,21 @@ func (m ReaderModel) Update(msg tea.Msg) (ReaderModel, tea.Cmd) {
 		m.width = msg.Width
 		m.height = msg.Height
 		m.reflow()
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "up", "k":
+			m.scrollUp()
+		case "down", "j":
+			m.scrollDown()
+		case " ", "f", "pgdown":
+			m.PageDown()
+		case "b", "pgup":
+			m.PageUp()
+		case "g":
+			m.GoStart()
+		case "G":
+			m.GoEnd()
+		}
 	}
 	return m, nil
 }
