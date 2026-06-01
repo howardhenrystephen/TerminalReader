@@ -14,7 +14,15 @@ A terminal-based novel reader TUI app built with [Bubble Tea](https://github.com
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=howard/TerminalReader&type=Date)](https://star-history.com/#howard/TerminalReader&Date)
+## Star History
+
+<a href="https://www.star-history.com/?repos=howard%2FTerminalReader&type=timeline&logscale=&legend=bottom-right">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=howard/TerminalReader&type=timeline&theme=dark&logscale&legend=bottom-right" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=howard/TerminalReader&type=timeline&logscale&legend=bottom-right" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=howard/TerminalReader&type=timeline&logscale&legend=bottom-right" />
+ </picture>
+</a>
 
 ## Features
 
