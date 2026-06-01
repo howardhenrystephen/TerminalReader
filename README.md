@@ -9,12 +9,12 @@ A terminal-based novel reader TUI app built with [Bubble Tea](https://github.com
 ![Bubbles](https://img.shields.io/badge/Bubbles-v0.18.0-ff69b4)
 ![Lipgloss](https://img.shields.io/badge/Lipgloss-v1.1.1-ff69b4)
 ![SQLite](https://img.shields.io/badge/SQLite-v1.51.0-orange)
-[![Release](https://img.shields.io/github/v/release/howard/TerminalReader)](https://github.com/howard/TerminalReader/releases)
-[![Stars](https://img.shields.io/github/stars/howard/TerminalReader?style=social)](https://github.com/howard/TerminalReader/stargazers)
+[![Release](https://img.shields.io/github/v/release/howardhenrystephen/TerminalReader)](https://github.com/howardhenrystephen/TerminalReader/releases)
+[![Stars](https://img.shields.io/github/stars/howardhenrystephen/TerminalReader?style=social)](https://github.com/howardhenrystephen/TerminalReader/stargazers)
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=howard/TerminalReader&type=Date)](https://star-history.com/#howard/TerminalReader&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=howardhenrystephen/TerminalReader&type=Date)](https://star-history.com/#howardhenrystephen/TerminalReader&Date)
 
 ## Features
 
@@ -26,7 +26,7 @@ A terminal-based novel reader TUI app built with [Bubble Tea](https://github.com
 - **Reading Position Save**: Auto-records chapter and character offset, resumes on next open
 - **Chapter Picker**: Filterable chapter list for quick jumps to any chapter
 - **Help**: Press `?` for program introduction
-- **Logging**: Full-level logging (DEBUG/INFO/WARN/ERROR) with daily rotation, file-only output
+- **Logging**: Full分级日志 (DEBUG/INFO/WARN/ERROR) with daily rotation, file-only output
 
 ## Installation
 
