@@ -49,6 +49,7 @@ func main() {
 	engine := crawler.NewEngine(database)
 	// 注册来源
 	engine.RegisterSource(crawler.NewIxdzs8Source())
+	engine.RegisterSource(crawler.NewBoqugeSource())
 	logger.Infof("爬虫引擎初始化完成，注册来源: %v", engine.GetSourceNames())
 
 	app := tui.NewApp(database, engine)

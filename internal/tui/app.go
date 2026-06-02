@@ -542,28 +542,53 @@ func (m AppModel) handleReaderKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 }
 
 func (m AppModel) handleSearchKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	// 1. 关闭/返回
 	if keyMatches(msg, SearchKeys.Close) {
-		logger.Debugf("[TUI] 关闭搜索(取消)")
-		return m, func() tea.Msg { return CloseSearchMsg{Cancelled: true} }
+		if m.search.IsSelectingSource() || m.search.isSearching {
+			// 在来源选择阶段或搜索中 -> 直接关闭搜索
+			logger.Debugf("[TUI] 关闭搜索(取消)")
+			return m, func() tea.Msg { return CloseSearchMsg{Cancelled: true} }
+		}
+		// 在搜索结果阶段 -> 返回到来源选择
+		logger.Debugf("[TUI] 返回来源选择")
+		m.search.GoBack()
+		return m, nil
 	}
+
+	// 2. 确认/Enter
 	if keyMatches(msg, SearchKeys.Confirm) {
 		if m.search.isSearching {
 			return m, nil
 		}
-		if m.search.Value() != "" && !m.search.HasResults() {
-			return m, m.search.StartSearch()
+		// 步骤1：在来源选择阶段
+		if m.search.IsSelectingSource() {
+			// 1a: 输入为空 -> 忽略
+			if m.search.Value() == "" {
+				return m, nil
+			}
+			// 1b: 有来源列表但没选择 -> 显示来源列表（首次按Enter）
+			if !m.search.HasResults() {
+				return m, m.search.StartSearch()
+			}
+			// 1c: 已有来源列表 -> 选择来源并开始搜索
+			return m, m.search.SelectSource()
 		}
+		// 步骤2：在搜索结果中按 Enter 开始爬取
 		if result := m.search.SelectedResult(); result != nil && result.Available {
 			return m, func() tea.Msg {
 				return StartCrawlMsg{
+					BookTitle:  result.BookTitle,
 					SourceName: result.SourceName,
 					SourceURL:  result.SourceURL,
 				}
 			}
 		}
+		return m, nil
 	}
+
+	// 3. 后台下载（仅在搜索结果页面，且输入框失焦时可用）
 	if keyMatches(msg, SearchKeys.Background) {
-		if m.search.isSearching {
+		if m.search.isSearching || m.search.IsSelectingSource() {
 			return m, nil
 		}
 		if result := m.search.SelectedResult(); result != nil && result.Available {
@@ -575,16 +600,24 @@ func (m AppModel) handleSearchKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 				m.crawl.crawlCmd(),
 			)
 		}
-	}
-	if keyMatches(msg, SearchKeys.Up) {
-		m.search.CursorUp()
-		return m, nil
-	}
-	if keyMatches(msg, SearchKeys.Down) {
-		m.search.CursorDown()
 		return m, nil
 	}
 
+	// 4. 上下移动（仅在列表有项目时）
+	if keyMatches(msg, SearchKeys.Up) {
+		if m.search.HasResults() {
+			m.search.CursorUp()
+		}
+		return m, nil
+	}
+	if keyMatches(msg, SearchKeys.Down) {
+		if m.search.HasResults() {
+			m.search.CursorDown()
+		}
+		return m, nil
+	}
+
+	// 5. 透传给 search 组件（输入框、列表）
 	search, cmd := m.search.Update(msg)
 	m.search = search
 	return m, cmd

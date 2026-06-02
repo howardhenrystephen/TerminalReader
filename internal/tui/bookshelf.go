@@ -370,11 +370,12 @@ func newBookDelegate() list.DefaultDelegate {
 		Foreground(lipgloss.Color(ColorMuted)).
 		Padding(0, 0, 0, 2)
 	d.Styles.SelectedTitle = lipgloss.NewStyle().
+		Border(lipgloss.NormalBorder(), false, false, false, true).
+		BorderForeground(lipgloss.Color(ColorAccent)).
 		Foreground(lipgloss.Color(ColorAccent)).
-		Padding(0, 0, 0, 2)
-	d.Styles.SelectedDesc = lipgloss.NewStyle().
-		Foreground(lipgloss.Color(ColorSubtext)).
-		Padding(0, 0, 0, 2)
+		Padding(0, 0, 0, 1)
+	d.Styles.SelectedDesc = d.Styles.SelectedTitle.Copy().
+		Foreground(lipgloss.Color(ColorSubtext))
 	return d
 }
 

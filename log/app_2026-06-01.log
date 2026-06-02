@@ -1,0 +1,381 @@
+[2026-06-01 21:21:33] [INFO] 程序启动
+[2026-06-01 21:21:33] [INFO] [DB] 打开数据库: data/novels.db
+[2026-06-01 21:21:33] [INFO] [DB] 数据库连接成功
+[2026-06-01 21:21:33] [DEBUG] [DB] pinned 列可能已存在: SQL logic error: duplicate column name: pinned (1)
+[2026-06-01 21:21:33] [INFO] [DB] 数据库迁移完成
+[2026-06-01 21:21:33] [INFO] [Crawler] 创建爬虫引擎
+[2026-06-01 21:21:33] [INFO] [Crawler] 注册来源: 爱下电子书
+[2026-06-01 21:21:33] [INFO] 爬虫引擎初始化完成，注册来源: [爱下电子书]
+[2026-06-01 21:21:33] [DEBUG] [TUI] NewApp: 初始化应用模型
+[2026-06-01 21:21:33] [DEBUG] [TUI/Bookshelf] 初始化书架模型
+[2026-06-01 21:21:33] [INFO] TUI 程序启动
+[2026-06-01 21:21:33] [DEBUG] [TUI/Bookshelf] 加载书籍列表
+[2026-06-01 21:21:33] [DEBUG] [DB] 查询所有书籍
+[2026-06-01 21:21:33] [DEBUG] [DB] 查询到 3 本书
+[2026-06-01 21:21:33] [DEBUG] [TUI/Bookshelf] 加载到 3 本书
+[2026-06-01 21:21:34] [INFO] [TUI] 打开书籍 ID=4
+[2026-06-01 21:21:34] [DEBUG] [TUI/Reader] 加载书籍 ID=4
+[2026-06-01 21:21:34] [DEBUG] [DB] 查询书籍 ID=4
+[2026-06-01 21:21:34] [INFO] [TUI/Reader] 打开书籍: 九皇子传 第20章
+[2026-06-01 21:21:34] [DEBUG] [TUI/Reader] 加载章节 bookID=4 chapterNum=20
+[2026-06-01 21:21:34] [DEBUG] [DB] 获取章节: bookID=4, chapterNum=20
+[2026-06-01 21:21:34] [DEBUG] [TUI/Reader] 章节加载完成: 第20章 (字数=3837)
+[2026-06-01 21:21:41] [DEBUG] [TUI] 下一章
+[2026-06-01 21:21:41] [DEBUG] [TUI/Reader] 下一章: 21
+[2026-06-01 21:21:41] [DEBUG] [TUI/Reader] 加载章节 bookID=4 chapterNum=21
+[2026-06-01 21:21:41] [DEBUG] [DB] 获取章节: bookID=4, chapterNum=21
+[2026-06-01 21:21:41] [DEBUG] [TUI/Reader] 章节加载完成: 第21章 (字数=3012)
+[2026-06-01 21:21:43] [DEBUG] [TUI] 上一章
+[2026-06-01 21:21:43] [DEBUG] [TUI/Reader] 上一章: 20
+[2026-06-01 21:21:43] [DEBUG] [TUI/Reader] 加载章节 bookID=4 chapterNum=20
+[2026-06-01 21:21:43] [DEBUG] [DB] 获取章节: bookID=4, chapterNum=20
+[2026-06-01 21:21:43] [DEBUG] [TUI/Reader] 章节加载完成: 第20章 (字数=3837)
+[2026-06-01 21:21:53] [DEBUG] [TUI] 上一章
+[2026-06-01 21:21:53] [DEBUG] [TUI/Reader] 上一章: 19
+[2026-06-01 21:21:53] [DEBUG] [TUI/Reader] 加载章节 bookID=4 chapterNum=19
+[2026-06-01 21:21:53] [DEBUG] [DB] 获取章节: bookID=4, chapterNum=19
+[2026-06-01 21:21:53] [DEBUG] [TUI/Reader] 章节加载完成: 第19章 (字数=3074)
+[2026-06-01 21:21:53] [DEBUG] [TUI] 上一章
+[2026-06-01 21:21:53] [DEBUG] [TUI/Reader] 上一章: 18
+[2026-06-01 21:21:53] [DEBUG] [TUI/Reader] 加载章节 bookID=4 chapterNum=18
+[2026-06-01 21:21:53] [DEBUG] [DB] 获取章节: bookID=4, chapterNum=18
+[2026-06-01 21:21:53] [DEBUG] [TUI/Reader] 章节加载完成: 第18章 (字数=2505)
+[2026-06-01 21:21:56] [DEBUG] [TUI] 阅读器返回书架
+[2026-06-01 21:21:56] [INFO] [TUI] 关闭阅读器，保存进度
+[2026-06-01 21:21:56] [DEBUG] [TUI/Reader] 保存进度: bookID=4 chapter=18 offset=0
+[2026-06-01 21:21:56] [DEBUG] [DB] 更新阅读进度: bookID=4, chapter=18, offset=0
+[2026-06-01 21:21:56] [DEBUG] [TUI/Bookshelf] 加载书籍列表
+[2026-06-01 21:21:56] [DEBUG] [DB] 查询所有书籍
+[2026-06-01 21:21:56] [DEBUG] [DB] 查询到 3 本书
+[2026-06-01 21:21:56] [DEBUG] [TUI/Bookshelf] 加载到 3 本书
+[2026-06-01 21:21:57] [INFO] [TUI] 打开书籍 ID=2
+[2026-06-01 21:21:57] [DEBUG] [TUI/Reader] 加载书籍 ID=2
+[2026-06-01 21:21:57] [DEBUG] [DB] 查询书籍 ID=2
+[2026-06-01 21:21:57] [INFO] [TUI/Reader] 打开书籍: 剑颂 第47章
+[2026-06-01 21:21:57] [DEBUG] [TUI/Reader] 加载章节 bookID=2 chapterNum=47
+[2026-06-01 21:21:57] [DEBUG] [DB] 获取章节: bookID=2, chapterNum=47
+[2026-06-01 21:21:57] [DEBUG] [TUI/Reader] 章节加载完成: 第47章 (字数=2487)
+[2026-06-01 21:22:01] [DEBUG] [TUI] 下一章
+[2026-06-01 21:22:01] [DEBUG] [TUI/Reader] 下一章: 48
+[2026-06-01 21:22:01] [DEBUG] [TUI/Reader] 加载章节 bookID=2 chapterNum=48
+[2026-06-01 21:22:01] [DEBUG] [DB] 获取章节: bookID=2, chapterNum=48
+[2026-06-01 21:22:01] [DEBUG] [TUI/Reader] 章节加载完成: 第48章 (字数=2368)
+[2026-06-01 21:22:01] [DEBUG] [TUI] 下一章
+[2026-06-01 21:22:01] [DEBUG] [TUI/Reader] 下一章: 49
+[2026-06-01 21:22:01] [DEBUG] [TUI/Reader] 加载章节 bookID=2 chapterNum=49
+[2026-06-01 21:22:01] [DEBUG] [DB] 获取章节: bookID=2, chapterNum=49
+[2026-06-01 21:22:01] [DEBUG] [TUI/Reader] 章节加载完成: 第49章 (字数=2747)
+[2026-06-01 21:22:02] [DEBUG] [TUI] 上一章
+[2026-06-01 21:22:02] [DEBUG] [TUI/Reader] 上一章: 48
+[2026-06-01 21:22:02] [DEBUG] [TUI/Reader] 加载章节 bookID=2 chapterNum=48
+[2026-06-01 21:22:02] [DEBUG] [DB] 获取章节: bookID=2, chapterNum=48
+[2026-06-01 21:22:02] [DEBUG] [TUI/Reader] 章节加载完成: 第48章 (字数=2368)
+[2026-06-01 21:22:02] [DEBUG] [TUI] 上一章
+[2026-06-01 21:22:02] [DEBUG] [TUI/Reader] 上一章: 47
+[2026-06-01 21:22:02] [DEBUG] [TUI/Reader] 加载章节 bookID=2 chapterNum=47
+[2026-06-01 21:22:02] [DEBUG] [DB] 获取章节: bookID=2, chapterNum=47
+[2026-06-01 21:22:02] [DEBUG] [TUI/Reader] 章节加载完成: 第47章 (字数=2487)
+[2026-06-01 21:22:02] [DEBUG] [TUI] 上一章
+[2026-06-01 21:22:02] [DEBUG] [TUI/Reader] 上一章: 46
+[2026-06-01 21:22:02] [DEBUG] [TUI/Reader] 加载章节 bookID=2 chapterNum=46
+[2026-06-01 21:22:02] [DEBUG] [DB] 获取章节: bookID=2, chapterNum=46
+[2026-06-01 21:22:02] [DEBUG] [TUI/Reader] 章节加载完成: 第46章 (字数=2227)
+[2026-06-01 21:22:03] [DEBUG] [TUI] 上一章
+[2026-06-01 21:22:03] [DEBUG] [TUI/Reader] 上一章: 45
+[2026-06-01 21:22:03] [DEBUG] [TUI/Reader] 加载章节 bookID=2 chapterNum=45
+[2026-06-01 21:22:03] [DEBUG] [DB] 获取章节: bookID=2, chapterNum=45
+[2026-06-01 21:22:03] [DEBUG] [TUI/Reader] 章节加载完成: 第45章 (字数=2834)
+[2026-06-01 21:22:03] [DEBUG] [TUI] 上一章
+[2026-06-01 21:22:03] [DEBUG] [TUI/Reader] 上一章: 44
+[2026-06-01 21:22:03] [DEBUG] [TUI/Reader] 加载章节 bookID=2 chapterNum=44
+[2026-06-01 21:22:03] [DEBUG] [DB] 获取章节: bookID=2, chapterNum=44
+[2026-06-01 21:22:03] [DEBUG] [TUI/Reader] 章节加载完成: 第44章 (字数=2617)
+[2026-06-01 21:22:03] [DEBUG] [TUI] 上一章
+[2026-06-01 21:22:03] [DEBUG] [TUI/Reader] 上一章: 43
+[2026-06-01 21:22:03] [DEBUG] [TUI/Reader] 加载章节 bookID=2 chapterNum=43
+[2026-06-01 21:22:03] [DEBUG] [DB] 获取章节: bookID=2, chapterNum=43
+[2026-06-01 21:22:03] [DEBUG] [TUI/Reader] 章节加载完成: 第43章 (字数=2545)
+[2026-06-01 21:22:03] [DEBUG] [TUI] 上一章
+[2026-06-01 21:22:03] [DEBUG] [TUI/Reader] 上一章: 42
+[2026-06-01 21:22:03] [DEBUG] [TUI/Reader] 加载章节 bookID=2 chapterNum=42
+[2026-06-01 21:22:03] [DEBUG] [DB] 获取章节: bookID=2, chapterNum=42
+[2026-06-01 21:22:03] [DEBUG] [TUI/Reader] 章节加载完成: 第42章 (字数=186)
+[2026-06-01 21:22:04] [DEBUG] [TUI] 上一章
+[2026-06-01 21:22:04] [DEBUG] [TUI/Reader] 上一章: 41
+[2026-06-01 21:22:04] [DEBUG] [TUI/Reader] 加载章节 bookID=2 chapterNum=41
+[2026-06-01 21:22:04] [DEBUG] [DB] 获取章节: bookID=2, chapterNum=41
+[2026-06-01 21:22:04] [DEBUG] [TUI/Reader] 章节加载完成: 第41章 (字数=2878)
+[2026-06-01 21:22:05] [DEBUG] [TUI] 上一章
+[2026-06-01 21:22:05] [DEBUG] [TUI/Reader] 上一章: 40
+[2026-06-01 21:22:05] [DEBUG] [TUI/Reader] 加载章节 bookID=2 chapterNum=40
+[2026-06-01 21:22:05] [DEBUG] [DB] 获取章节: bookID=2, chapterNum=40
+[2026-06-01 21:22:05] [DEBUG] [TUI/Reader] 章节加载完成: 第40章 (字数=2316)
+[2026-06-01 21:22:05] [DEBUG] [TUI] 下一章
+[2026-06-01 21:22:05] [DEBUG] [TUI/Reader] 下一章: 41
+[2026-06-01 21:22:05] [DEBUG] [TUI/Reader] 加载章节 bookID=2 chapterNum=41
+[2026-06-01 21:22:05] [DEBUG] [DB] 获取章节: bookID=2, chapterNum=41
+[2026-06-01 21:22:05] [DEBUG] [TUI/Reader] 章节加载完成: 第41章 (字数=2878)
+[2026-06-01 21:22:06] [DEBUG] [TUI] 下一章
+[2026-06-01 21:22:06] [DEBUG] [TUI/Reader] 下一章: 42
+[2026-06-01 21:22:06] [DEBUG] [TUI/Reader] 加载章节 bookID=2 chapterNum=42
+[2026-06-01 21:22:06] [DEBUG] [DB] 获取章节: bookID=2, chapterNum=42
+[2026-06-01 21:22:06] [DEBUG] [TUI/Reader] 章节加载完成: 第42章 (字数=186)
+[2026-06-01 21:22:07] [DEBUG] [TUI] 下一章
+[2026-06-01 21:22:07] [DEBUG] [TUI/Reader] 下一章: 43
+[2026-06-01 21:22:07] [DEBUG] [TUI/Reader] 加载章节 bookID=2 chapterNum=43
+[2026-06-01 21:22:07] [DEBUG] [DB] 获取章节: bookID=2, chapterNum=43
+[2026-06-01 21:22:07] [DEBUG] [TUI/Reader] 章节加载完成: 第43章 (字数=2545)
+[2026-06-01 21:22:08] [DEBUG] [TUI] 上一章
+[2026-06-01 21:22:08] [DEBUG] [TUI/Reader] 上一章: 42
+[2026-06-01 21:22:08] [DEBUG] [TUI/Reader] 加载章节 bookID=2 chapterNum=42
+[2026-06-01 21:22:08] [DEBUG] [DB] 获取章节: bookID=2, chapterNum=42
+[2026-06-01 21:22:08] [DEBUG] [TUI/Reader] 章节加载完成: 第42章 (字数=186)
+[2026-06-01 21:22:08] [DEBUG] [TUI] 下一章
+[2026-06-01 21:22:08] [DEBUG] [TUI/Reader] 下一章: 43
+[2026-06-01 21:22:08] [DEBUG] [TUI/Reader] 加载章节 bookID=2 chapterNum=43
+[2026-06-01 21:22:08] [DEBUG] [DB] 获取章节: bookID=2, chapterNum=43
+[2026-06-01 21:22:08] [DEBUG] [TUI/Reader] 章节加载完成: 第43章 (字数=2545)
+[2026-06-01 21:22:09] [DEBUG] [TUI] 下一章
+[2026-06-01 21:22:09] [DEBUG] [TUI/Reader] 下一章: 44
+[2026-06-01 21:22:09] [DEBUG] [TUI/Reader] 加载章节 bookID=2 chapterNum=44
+[2026-06-01 21:22:09] [DEBUG] [DB] 获取章节: bookID=2, chapterNum=44
+[2026-06-01 21:22:09] [DEBUG] [TUI/Reader] 章节加载完成: 第44章 (字数=2617)
+[2026-06-01 21:22:09] [DEBUG] [TUI] 下一章
+[2026-06-01 21:22:09] [DEBUG] [TUI/Reader] 下一章: 45
+[2026-06-01 21:22:09] [DEBUG] [TUI/Reader] 加载章节 bookID=2 chapterNum=45
+[2026-06-01 21:22:09] [DEBUG] [DB] 获取章节: bookID=2, chapterNum=45
+[2026-06-01 21:22:09] [DEBUG] [TUI/Reader] 章节加载完成: 第45章 (字数=2834)
+[2026-06-01 21:22:10] [DEBUG] [TUI] 下一章
+[2026-06-01 21:22:10] [DEBUG] [TUI/Reader] 下一章: 46
+[2026-06-01 21:22:10] [DEBUG] [TUI/Reader] 加载章节 bookID=2 chapterNum=46
+[2026-06-01 21:22:10] [DEBUG] [DB] 获取章节: bookID=2, chapterNum=46
+[2026-06-01 21:22:10] [DEBUG] [TUI/Reader] 章节加载完成: 第46章 (字数=2227)
+[2026-06-01 21:22:11] [DEBUG] [TUI] 下一章
+[2026-06-01 21:22:11] [DEBUG] [TUI/Reader] 下一章: 47
+[2026-06-01 21:22:11] [DEBUG] [TUI/Reader] 加载章节 bookID=2 chapterNum=47
+[2026-06-01 21:22:11] [DEBUG] [DB] 获取章节: bookID=2, chapterNum=47
+[2026-06-01 21:22:11] [DEBUG] [TUI/Reader] 章节加载完成: 第47章 (字数=2487)
+[2026-06-01 21:22:11] [DEBUG] [TUI] 下一章
+[2026-06-01 21:22:11] [DEBUG] [TUI/Reader] 下一章: 48
+[2026-06-01 21:22:11] [DEBUG] [TUI/Reader] 加载章节 bookID=2 chapterNum=48
+[2026-06-01 21:22:11] [DEBUG] [DB] 获取章节: bookID=2, chapterNum=48
+[2026-06-01 21:22:11] [DEBUG] [TUI/Reader] 章节加载完成: 第48章 (字数=2368)
+[2026-06-01 21:22:11] [DEBUG] [TUI] 下一章
+[2026-06-01 21:22:11] [DEBUG] [TUI/Reader] 下一章: 49
+[2026-06-01 21:22:11] [DEBUG] [TUI/Reader] 加载章节 bookID=2 chapterNum=49
+[2026-06-01 21:22:11] [DEBUG] [DB] 获取章节: bookID=2, chapterNum=49
+[2026-06-01 21:22:11] [DEBUG] [TUI/Reader] 章节加载完成: 第49章 (字数=2747)
+[2026-06-01 21:22:12] [DEBUG] [TUI] 下一章
+[2026-06-01 21:22:12] [DEBUG] [TUI/Reader] 下一章: 50
+[2026-06-01 21:22:12] [DEBUG] [TUI/Reader] 加载章节 bookID=2 chapterNum=50
+[2026-06-01 21:22:12] [DEBUG] [DB] 获取章节: bookID=2, chapterNum=50
+[2026-06-01 21:22:12] [DEBUG] [TUI/Reader] 章节加载完成: 第50章 (字数=2828)
+[2026-06-01 21:22:12] [DEBUG] [TUI] 下一章
+[2026-06-01 21:22:12] [DEBUG] [TUI/Reader] 下一章: 51
+[2026-06-01 21:22:12] [DEBUG] [TUI/Reader] 加载章节 bookID=2 chapterNum=51
+[2026-06-01 21:22:12] [DEBUG] [DB] 获取章节: bookID=2, chapterNum=51
+[2026-06-01 21:22:12] [DEBUG] [TUI/Reader] 章节加载完成: 第51章 (字数=2258)
+[2026-06-01 21:22:13] [DEBUG] [TUI] 下一章
+[2026-06-01 21:22:13] [DEBUG] [TUI/Reader] 下一章: 52
+[2026-06-01 21:22:13] [DEBUG] [TUI/Reader] 加载章节 bookID=2 chapterNum=52
+[2026-06-01 21:22:13] [DEBUG] [DB] 获取章节: bookID=2, chapterNum=52
+[2026-06-01 21:22:13] [DEBUG] [TUI/Reader] 章节加载完成: 第52章 (字数=2859)
+[2026-06-01 21:22:14] [DEBUG] [TUI] 下一章
+[2026-06-01 21:22:14] [DEBUG] [TUI/Reader] 下一章: 53
+[2026-06-01 21:22:14] [DEBUG] [TUI/Reader] 加载章节 bookID=2 chapterNum=53
+[2026-06-01 21:22:14] [DEBUG] [DB] 获取章节: bookID=2, chapterNum=53
+[2026-06-01 21:22:14] [DEBUG] [TUI/Reader] 章节加载完成: 第53章 (字数=3378)
+[2026-06-01 21:22:14] [DEBUG] [TUI] 下一章
+[2026-06-01 21:22:14] [DEBUG] [TUI/Reader] 下一章: 54
+[2026-06-01 21:22:14] [DEBUG] [TUI/Reader] 加载章节 bookID=2 chapterNum=54
+[2026-06-01 21:22:14] [DEBUG] [DB] 获取章节: bookID=2, chapterNum=54
+[2026-06-01 21:22:14] [DEBUG] [TUI/Reader] 章节加载完成: 第54章 (字数=2782)
+[2026-06-01 21:22:14] [DEBUG] [TUI] 下一章
+[2026-06-01 21:22:14] [DEBUG] [TUI/Reader] 下一章: 55
+[2026-06-01 21:22:14] [DEBUG] [TUI/Reader] 加载章节 bookID=2 chapterNum=55
+[2026-06-01 21:22:14] [DEBUG] [DB] 获取章节: bookID=2, chapterNum=55
+[2026-06-01 21:22:14] [DEBUG] [TUI/Reader] 章节加载完成: 第55章 (字数=2618)
+[2026-06-01 21:22:14] [DEBUG] [TUI] 下一章
+[2026-06-01 21:22:14] [DEBUG] [TUI/Reader] 下一章: 56
+[2026-06-01 21:22:14] [DEBUG] [TUI/Reader] 加载章节 bookID=2 chapterNum=56
+[2026-06-01 21:22:14] [DEBUG] [DB] 获取章节: bookID=2, chapterNum=56
+[2026-06-01 21:22:14] [DEBUG] [TUI/Reader] 章节加载完成: 第56章 (字数=2601)
+[2026-06-01 21:22:15] [DEBUG] [TUI] 下一章
+[2026-06-01 21:22:15] [DEBUG] [TUI/Reader] 下一章: 57
+[2026-06-01 21:22:15] [DEBUG] [TUI/Reader] 加载章节 bookID=2 chapterNum=57
+[2026-06-01 21:22:15] [DEBUG] [DB] 获取章节: bookID=2, chapterNum=57
+[2026-06-01 21:22:15] [DEBUG] [TUI/Reader] 章节加载完成: 第57章 (字数=2458)
+[2026-06-01 21:22:16] [DEBUG] [TUI] 上一章
+[2026-06-01 21:22:16] [DEBUG] [TUI/Reader] 上一章: 56
+[2026-06-01 21:22:16] [DEBUG] [TUI/Reader] 加载章节 bookID=2 chapterNum=56
+[2026-06-01 21:22:16] [DEBUG] [DB] 获取章节: bookID=2, chapterNum=56
+[2026-06-01 21:22:16] [DEBUG] [TUI/Reader] 章节加载完成: 第56章 (字数=2601)
+[2026-06-01 21:22:16] [DEBUG] [TUI] 上一章
+[2026-06-01 21:22:16] [DEBUG] [TUI/Reader] 上一章: 55
+[2026-06-01 21:22:16] [DEBUG] [TUI/Reader] 加载章节 bookID=2 chapterNum=55
+[2026-06-01 21:22:16] [DEBUG] [DB] 获取章节: bookID=2, chapterNum=55
+[2026-06-01 21:22:16] [DEBUG] [TUI/Reader] 章节加载完成: 第55章 (字数=2618)
+[2026-06-01 21:22:16] [DEBUG] [TUI] 上一章
+[2026-06-01 21:22:16] [DEBUG] [TUI/Reader] 上一章: 54
+[2026-06-01 21:22:16] [DEBUG] [TUI/Reader] 加载章节 bookID=2 chapterNum=54
+[2026-06-01 21:22:16] [DEBUG] [DB] 获取章节: bookID=2, chapterNum=54
+[2026-06-01 21:22:16] [DEBUG] [TUI/Reader] 章节加载完成: 第54章 (字数=2782)
+[2026-06-01 21:22:18] [DEBUG] [TUI] 上一章
+[2026-06-01 21:22:18] [DEBUG] [TUI/Reader] 上一章: 53
+[2026-06-01 21:22:18] [DEBUG] [TUI/Reader] 加载章节 bookID=2 chapterNum=53
+[2026-06-01 21:22:18] [DEBUG] [DB] 获取章节: bookID=2, chapterNum=53
+[2026-06-01 21:22:18] [DEBUG] [TUI/Reader] 章节加载完成: 第53章 (字数=3378)
+[2026-06-01 21:22:19] [DEBUG] [TUI] 下一章
+[2026-06-01 21:22:19] [DEBUG] [TUI/Reader] 下一章: 54
+[2026-06-01 21:22:19] [DEBUG] [TUI/Reader] 加载章节 bookID=2 chapterNum=54
+[2026-06-01 21:22:19] [DEBUG] [DB] 获取章节: bookID=2, chapterNum=54
+[2026-06-01 21:22:19] [DEBUG] [TUI/Reader] 章节加载完成: 第54章 (字数=2782)
+[2026-06-01 21:22:21] [DEBUG] [TUI] 阅读器返回书架
+[2026-06-01 21:22:21] [INFO] [TUI] 关闭阅读器，保存进度
+[2026-06-01 21:22:21] [DEBUG] [TUI/Reader] 保存进度: bookID=2 chapter=54 offset=0
+[2026-06-01 21:22:21] [DEBUG] [DB] 更新阅读进度: bookID=2, chapter=54, offset=0
+[2026-06-01 21:22:21] [DEBUG] [TUI/Bookshelf] 加载书籍列表
+[2026-06-01 21:22:21] [DEBUG] [DB] 查询所有书籍
+[2026-06-01 21:22:21] [DEBUG] [DB] 查询到 3 本书
+[2026-06-01 21:22:21] [DEBUG] [TUI/Bookshelf] 加载到 3 本书
+[2026-06-01 21:22:23] [INFO] [TUI] 打开书籍 ID=5
+[2026-06-01 21:22:23] [DEBUG] [TUI/Reader] 加载书籍 ID=5
+[2026-06-01 21:22:23] [DEBUG] [DB] 查询书籍 ID=5
+[2026-06-01 21:22:23] [INFO] [TUI/Reader] 打开书籍: 剑叩天门 第1章
+[2026-06-01 21:22:23] [DEBUG] [TUI/Reader] 加载章节 bookID=5 chapterNum=1
+[2026-06-01 21:22:23] [DEBUG] [DB] 获取章节: bookID=5, chapterNum=1
+[2026-06-01 21:22:23] [DEBUG] [TUI/Reader] 章节加载完成: 第1章 (字数=2467)
+[2026-06-01 21:23:03] [DEBUG] [TUI] 阅读器返回书架
+[2026-06-01 21:23:03] [INFO] [TUI] 关闭阅读器，保存进度
+[2026-06-01 21:23:03] [DEBUG] [TUI/Reader] 保存进度: bookID=5 chapter=1 offset=0
+[2026-06-01 21:23:03] [DEBUG] [DB] 更新阅读进度: bookID=5, chapter=1, offset=0
+[2026-06-01 21:23:03] [DEBUG] [TUI/Bookshelf] 加载书籍列表
+[2026-06-01 21:23:03] [DEBUG] [DB] 查询所有书籍
+[2026-06-01 21:23:03] [DEBUG] [DB] 查询到 3 本书
+[2026-06-01 21:23:03] [DEBUG] [TUI/Bookshelf] 加载到 3 本书
+[2026-06-01 21:23:05] [INFO] [TUI] 打开搜索
+[2026-06-01 21:23:06] [DEBUG] [TUI] 关闭搜索(取消)
+[2026-06-01 21:23:06] [DEBUG] [TUI] 关闭搜索
+[2026-06-01 21:23:07] [DEBUG] [TUI] 显示帮助
+[2026-06-01 21:23:09] [DEBUG] [TUI] 关闭帮助
+[2026-06-01 21:23:37] [INFO] [TUI] 打开书籍 ID=4
+[2026-06-01 21:23:37] [DEBUG] [TUI/Reader] 加载书籍 ID=4
+[2026-06-01 21:23:37] [DEBUG] [DB] 查询书籍 ID=4
+[2026-06-01 21:23:37] [INFO] [TUI/Reader] 打开书籍: 九皇子传 第18章
+[2026-06-01 21:23:37] [DEBUG] [TUI/Reader] 加载章节 bookID=4 chapterNum=18
+[2026-06-01 21:23:37] [DEBUG] [DB] 获取章节: bookID=4, chapterNum=18
+[2026-06-01 21:23:37] [DEBUG] [TUI/Reader] 章节加载完成: 第18章 (字数=2505)
+[2026-06-01 21:23:42] [DEBUG] [TUI] 打开章节选择器 bookID=4 currentCh=18
+[2026-06-01 21:23:42] [DEBUG] [TUI/ChapterPicker] 打开章节选择器 bookID=4 currentCh=18
+[2026-06-01 21:23:42] [DEBUG] [TUI/ChapterPicker] 加载章节列表 bookID=4
+[2026-06-01 21:23:42] [DEBUG] [DB] 获取章节预览列表: bookID=4
+[2026-06-01 21:23:42] [DEBUG] [TUI/ChapterPicker] 加载到 2770 个章节
+[2026-06-01 21:23:45] [DEBUG] [TUI] 关闭章节选择器
+[2026-06-01 21:23:45] [DEBUG] [TUI/ChapterPicker] 关闭章节选择器
+[2026-06-01 21:23:46] [DEBUG] [TUI] 打开章节选择器 bookID=4 currentCh=18
+[2026-06-01 21:23:46] [DEBUG] [TUI/ChapterPicker] 打开章节选择器 bookID=4 currentCh=18
+[2026-06-01 21:23:46] [DEBUG] [TUI/ChapterPicker] 加载章节列表 bookID=4
+[2026-06-01 21:23:46] [DEBUG] [DB] 获取章节预览列表: bookID=4
+[2026-06-01 21:23:46] [DEBUG] [TUI/ChapterPicker] 加载到 2770 个章节
+[2026-06-01 21:23:59] [INFO] [TUI] 跳转章节: 700
+[2026-06-01 21:23:59] [DEBUG] [TUI/ChapterPicker] 关闭章节选择器
+[2026-06-01 21:23:59] [DEBUG] [TUI/Reader] 加载章节 bookID=4 chapterNum=700
+[2026-06-01 21:23:59] [DEBUG] [DB] 获取章节: bookID=4, chapterNum=700
+[2026-06-01 21:23:59] [DEBUG] [TUI/Reader] 章节加载完成: 第700章 (字数=2093)
+[2026-06-01 21:24:01] [DEBUG] [TUI] 上一章
+[2026-06-01 21:24:01] [DEBUG] [TUI/Reader] 上一章: 699
+[2026-06-01 21:24:01] [DEBUG] [TUI/Reader] 加载章节 bookID=4 chapterNum=699
+[2026-06-01 21:24:01] [DEBUG] [DB] 获取章节: bookID=4, chapterNum=699
+[2026-06-01 21:24:01] [DEBUG] [TUI/Reader] 章节加载完成: 第699章 (字数=2170)
+[2026-06-01 21:24:02] [DEBUG] [TUI] 阅读器返回书架
+[2026-06-01 21:24:02] [INFO] [TUI] 关闭阅读器，保存进度
+[2026-06-01 21:24:02] [DEBUG] [TUI/Reader] 保存进度: bookID=4 chapter=699 offset=0
+[2026-06-01 21:24:02] [DEBUG] [DB] 更新阅读进度: bookID=4, chapter=699, offset=0
+[2026-06-01 21:24:02] [DEBUG] [TUI/Bookshelf] 加载书籍列表
+[2026-06-01 21:24:02] [DEBUG] [DB] 查询所有书籍
+[2026-06-01 21:24:02] [DEBUG] [DB] 查询到 3 本书
+[2026-06-01 21:24:02] [DEBUG] [TUI/Bookshelf] 加载到 3 本书
+[2026-06-01 21:24:05] [INFO] 等待后台爬取任务结束...
+[2026-06-01 21:24:05] [INFO] [TUI] 等待后台爬取任务结束
+[2026-06-01 21:24:05] [DEBUG] [TUI/Crawl] 等待爬取 goroutine 结束
+[2026-06-01 21:24:05] [DEBUG] [TUI/Crawl] 爬取 goroutine 已结束
+[2026-06-01 21:24:05] [INFO] [TUI] 后台爬取任务已结束
+[2026-06-01 21:24:05] [INFO] 后台爬取任务已结束
+[2026-06-01 21:24:05] [INFO] 程序退出
+[2026-06-01 21:25:19] [INFO] 程序启动
+[2026-06-01 21:25:19] [INFO] [DB] 打开数据库: data/novels.db
+[2026-06-01 21:25:19] [INFO] [DB] 数据库连接成功
+[2026-06-01 21:25:19] [DEBUG] [DB] pinned 列可能已存在: SQL logic error: duplicate column name: pinned (1)
+[2026-06-01 21:25:19] [INFO] [DB] 数据库迁移完成
+[2026-06-01 21:25:19] [INFO] [Crawler] 创建爬虫引擎
+[2026-06-01 21:25:19] [INFO] [Crawler] 注册来源: 爱下电子书
+[2026-06-01 21:25:19] [INFO] 爬虫引擎初始化完成，注册来源: [爱下电子书]
+[2026-06-01 21:25:19] [DEBUG] [TUI] NewApp: 初始化应用模型
+[2026-06-01 21:25:19] [DEBUG] [TUI/Bookshelf] 初始化书架模型
+[2026-06-01 21:25:19] [INFO] TUI 程序启动
+[2026-06-01 21:25:19] [DEBUG] [TUI/Bookshelf] 加载书籍列表
+[2026-06-01 21:25:19] [DEBUG] [DB] 查询所有书籍
+[2026-06-01 21:25:19] [DEBUG] [DB] 查询到 3 本书
+[2026-06-01 21:25:19] [DEBUG] [TUI/Bookshelf] 加载到 3 本书
+[2026-06-01 21:25:20] [INFO] [TUI] 打开书籍 ID=4
+[2026-06-01 21:25:20] [DEBUG] [TUI/Reader] 加载书籍 ID=4
+[2026-06-01 21:25:20] [DEBUG] [DB] 查询书籍 ID=4
+[2026-06-01 21:25:20] [INFO] [TUI/Reader] 打开书籍: 九皇子传 第699章
+[2026-06-01 21:25:20] [DEBUG] [TUI/Reader] 加载章节 bookID=4 chapterNum=699
+[2026-06-01 21:25:20] [DEBUG] [DB] 获取章节: bookID=4, chapterNum=699
+[2026-06-01 21:25:20] [DEBUG] [TUI/Reader] 章节加载完成: 第699章 (字数=2170)
+[2026-06-01 21:25:24] [DEBUG] [TUI] 阅读器返回书架
+[2026-06-01 21:25:24] [INFO] [TUI] 关闭阅读器，保存进度
+[2026-06-01 21:25:24] [DEBUG] [TUI/Reader] 保存进度: bookID=4 chapter=699 offset=74
+[2026-06-01 21:25:24] [DEBUG] [DB] 更新阅读进度: bookID=4, chapter=699, offset=74
+[2026-06-01 21:25:24] [DEBUG] [TUI/Bookshelf] 加载书籍列表
+[2026-06-01 21:25:24] [DEBUG] [DB] 查询所有书籍
+[2026-06-01 21:25:24] [DEBUG] [DB] 查询到 3 本书
+[2026-06-01 21:25:24] [DEBUG] [TUI/Bookshelf] 加载到 3 本书
+[2026-06-01 21:25:25] [INFO] [TUI] 打开书籍 ID=4
+[2026-06-01 21:25:25] [DEBUG] [TUI/Reader] 加载书籍 ID=4
+[2026-06-01 21:25:25] [DEBUG] [DB] 查询书籍 ID=4
+[2026-06-01 21:25:25] [INFO] [TUI/Reader] 打开书籍: 九皇子传 第699章
+[2026-06-01 21:25:25] [DEBUG] [TUI/Reader] 加载章节 bookID=4 chapterNum=699
+[2026-06-01 21:25:25] [DEBUG] [DB] 获取章节: bookID=4, chapterNum=699
+[2026-06-01 21:25:25] [DEBUG] [TUI/Reader] 章节加载完成: 第699章 (字数=2170)
+[2026-06-01 21:25:30] [DEBUG] [TUI] 打开章节选择器 bookID=4 currentCh=699
+[2026-06-01 21:25:30] [DEBUG] [TUI/ChapterPicker] 打开章节选择器 bookID=4 currentCh=699
+[2026-06-01 21:25:30] [DEBUG] [TUI/ChapterPicker] 加载章节列表 bookID=4
+[2026-06-01 21:25:30] [DEBUG] [DB] 获取章节预览列表: bookID=4
+[2026-06-01 21:25:31] [DEBUG] [TUI/ChapterPicker] 加载到 2770 个章节
+[2026-06-01 21:25:32] [INFO] [TUI] 跳转章节: 1
+[2026-06-01 21:25:32] [DEBUG] [TUI/ChapterPicker] 关闭章节选择器
+[2026-06-01 21:25:32] [DEBUG] [TUI/Reader] 加载章节 bookID=4 chapterNum=1
+[2026-06-01 21:25:32] [DEBUG] [DB] 获取章节: bookID=4, chapterNum=1
+[2026-06-01 21:25:32] [DEBUG] [TUI/Reader] 章节加载完成: 第1章 (字数=3736)
+[2026-06-01 21:25:34] [DEBUG] [TUI] 阅读器返回书架
+[2026-06-01 21:25:34] [INFO] [TUI] 关闭阅读器，保存进度
+[2026-06-01 21:25:34] [DEBUG] [TUI/Reader] 保存进度: bookID=4 chapter=1 offset=0
+[2026-06-01 21:25:34] [DEBUG] [DB] 更新阅读进度: bookID=4, chapter=1, offset=0
+[2026-06-01 21:25:34] [DEBUG] [TUI/Bookshelf] 加载书籍列表
+[2026-06-01 21:25:34] [DEBUG] [DB] 查询所有书籍
+[2026-06-01 21:25:34] [DEBUG] [DB] 查询到 3 本书
+[2026-06-01 21:25:34] [DEBUG] [TUI/Bookshelf] 加载到 3 本书
+[2026-06-01 21:25:35] [INFO] [TUI] 打开书籍 ID=4
+[2026-06-01 21:25:35] [DEBUG] [TUI/Reader] 加载书籍 ID=4
+[2026-06-01 21:25:35] [DEBUG] [DB] 查询书籍 ID=4
+[2026-06-01 21:25:35] [INFO] [TUI/Reader] 打开书籍: 九皇子传 第1章
+[2026-06-01 21:25:35] [DEBUG] [TUI/Reader] 加载章节 bookID=4 chapterNum=1
+[2026-06-01 21:25:35] [DEBUG] [DB] 获取章节: bookID=4, chapterNum=1
+[2026-06-01 21:25:35] [DEBUG] [TUI/Reader] 章节加载完成: 第1章 (字数=3736)
+[2026-06-01 21:25:36] [DEBUG] [TUI] 阅读器返回书架
+[2026-06-01 21:25:36] [INFO] [TUI] 关闭阅读器，保存进度
+[2026-06-01 21:25:36] [DEBUG] [TUI/Reader] 保存进度: bookID=4 chapter=1 offset=0
+[2026-06-01 21:25:36] [DEBUG] [DB] 更新阅读进度: bookID=4, chapter=1, offset=0
+[2026-06-01 21:25:36] [DEBUG] [TUI/Bookshelf] 加载书籍列表
+[2026-06-01 21:25:36] [DEBUG] [DB] 查询所有书籍
+[2026-06-01 21:25:36] [DEBUG] [DB] 查询到 3 本书
+[2026-06-01 21:25:36] [DEBUG] [TUI/Bookshelf] 加载到 3 本书
+[2026-06-01 21:25:37] [INFO] 等待后台爬取任务结束...
+[2026-06-01 21:25:37] [INFO] [TUI] 等待后台爬取任务结束
+[2026-06-01 21:25:37] [DEBUG] [TUI/Crawl] 等待爬取 goroutine 结束
+[2026-06-01 21:25:37] [DEBUG] [TUI/Crawl] 爬取 goroutine 已结束
+[2026-06-01 21:25:37] [INFO] [TUI] 后台爬取任务已结束
+[2026-06-01 21:25:37] [INFO] 后台爬取任务已结束
+[2026-06-01 21:25:37] [INFO] 程序退出

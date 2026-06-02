@@ -111,6 +111,9 @@ func (i *Ixdzs8Source) spiderRequest(ctx context.Context, req map[string]interfa
 
 	// 读取响应（只读第一行 JSON）
 	scanner := bufio.NewScanner(stdout)
+	// 增大缓冲区以支持大响应（如笔趣阁章节列表可能超过 64KB）
+	scanBuf := make([]byte, 0, 64*1024)
+	scanner.Buffer(scanBuf, 1024*1024)
 	var respLine string
 	if scanner.Scan() {
 		respLine = scanner.Text()

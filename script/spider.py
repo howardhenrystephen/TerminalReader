@@ -72,7 +72,7 @@ def extract_book_id(url: str) -> str:
 
 
 def extract_info(html: str, url: str) -> dict:
-    """提取小说信息"""
+    """提取小说信息（默认 ixdzs8 站点）"""
     from bs4 import BeautifulSoup
 
     soup = BeautifulSoup(html, "html.parser")
@@ -119,6 +119,106 @@ def extract_info(html: str, url: str) -> dict:
         "coverUrl": cover_url,
         "maxPage": max_page,
     }
+
+
+def extract_boquge_info(html: str, url: str) -> dict:
+    """提取笔趣阁小说信息"""
+    from bs4 import BeautifulSoup
+
+    soup = BeautifulSoup(html, "html.parser")
+
+    # 提取标题
+    title = "未知书名"
+    title_el = soup.select_one("dl.info dt")
+    if title_el:
+        title = title_el.get_text(strip=True)
+
+    # 提取作者
+    author = "未知作者"
+    for p in soup.select("dl.info dd p"):
+        text = p.get_text(strip=True)
+        if text.startswith("作者"):
+            author = text.replace("作者：", "").strip()
+            break
+
+    # 提取简介（优先取 #all，其次 #shot）
+    intro = ""
+    intro_el = soup.select_one("p.summary#all")
+    if intro_el:
+        for a in intro_el.select("a.unfold"):
+            a.decompose()
+        intro = intro_el.get_text(strip=True)
+        intro = intro.replace("简介：", "").strip()
+    else:
+        intro_el = soup.select_one("p.summary#shot")
+        if intro_el:
+            for a in intro_el.select("a.unfold"):
+                a.decompose()
+            intro = intro_el.get_text(strip=True)
+            intro = intro.replace("简介：", "").strip()
+
+    # 提取封面
+    cover_url = None
+    img_el = soup.select_one("div.novel-cover img")
+    if img_el:
+        cover_url = img_el.get("src") or img_el.get("data-src")
+        if cover_url:
+            parsed = urlparse(url)
+            domain = f"{parsed.scheme}://{parsed.netloc}"
+            if cover_url.startswith("//"):
+                cover_url = "https:" + cover_url
+            elif cover_url.startswith("/"):
+                cover_url = domain + cover_url
+
+    return {
+        "title": title,
+        "author": author,
+        "intro": intro,
+        "coverUrl": cover_url,
+        "maxPage": 0,
+    }
+
+
+def extract_boquge_chapter(html: str) -> dict:
+    """提取笔趣阁章节内容"""
+    from bs4 import BeautifulSoup
+
+    # 提取标题
+    title_match = re.search(r"<title>(.*?)</title>", html, re.IGNORECASE)
+    title = title_match.group(1).strip() if title_match else "未知章节"
+    title = re.split(r"[_\-|]", title)[0].strip()
+
+    # 提取内容
+    soup = BeautifulSoup(html, "html.parser")
+    content_el = soup.select_one("div#cContent")
+    if content_el:
+        paragraphs = content_el.find_all("p")
+        texts = []
+        for p in paragraphs:
+            text = p.get_text(strip=True)
+            if (
+                text
+                and not text.startswith("请记住本书首发域名")
+                and not text.startswith("顶点小说网")
+                and not text.startswith("网页版章节内容慢")
+                and not text.startswith("请退出转码页面")
+                and not text.startswith("新笔趣阁为你提供最快的")
+                and not text.startswith("由于各种问题地址更改为")
+                and not text.startswith("请收藏新地址避免迷路")
+            ):
+                texts.append(text)
+        content = "\n\n".join(texts)
+    else:
+        # 兜底
+        paragraphs = soup.find_all("p")
+        texts = [
+            p.get_text(strip=True)
+            for p in paragraphs
+            if len(p.get_text(strip=True)) > 10
+        ]
+        content = "\n\n".join(texts)
+
+    return {"title": title, "content": content}
 
 
 def extract_chapter(html: str) -> dict:
@@ -316,6 +416,67 @@ def crawl_chapters(
     }
 
 
+def fetch_boquge_chapter_list(
+    base_url: str, book_id: str, max_workers: int = 8
+) -> list:
+    """并发获取笔趣阁章节列表"""
+    from bs4 import BeautifulSoup
+
+    # 先获取第一页，提取尾页数字作为上界
+    first_page_html = fetch_html(f"{base_url}/wapbook/{book_id}-1.html")
+    last_page_match = re.search(
+        rf'href="{book_id}-(\d+)\.html"[^>]*>尾页', first_page_html
+    )
+    upper_bound = int(last_page_match.group(1)) if last_page_match else 1000
+
+    # 二分查找确定实际最后一页
+    def has_chapters(page: int) -> bool:
+        try:
+            html = fetch_html(f"{base_url}/wapbook/{book_id}-{page}.html")
+            return bool(re.search(rf'<a href="/wapbook/{book_id}_\d+\.html"', html))
+        except Exception:
+            return False
+
+    low, high = 1, upper_bound
+    while low < high:
+        mid = (low + high + 1) // 2
+        if has_chapters(mid):
+            low = mid
+        else:
+            high = mid - 1
+    actual_last = low
+
+    # 并发获取所有页面
+    def fetch_page(page: int):
+        try:
+            html = fetch_html(f"{base_url}/wapbook/{book_id}-{page}.html")
+            soup = BeautifulSoup(html, "html.parser")
+            chapters = []
+            for a in soup.select("ul#chapterlist li a"):
+                href = a.get("href", "")
+                if href.startswith("/wapbook/") and "_" in href:
+                    chapters.append(
+                        {"title": a.get_text(strip=True), "url": base_url + href}
+                    )
+            return page, chapters
+        except Exception as e:
+            return page, []
+
+    all_chapters = []
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = {executor.submit(fetch_page, p): p for p in range(1, actual_last + 1)}
+        page_results = {}
+        for future in as_completed(futures):
+            page, chapters = future.result()
+            page_results[page] = chapters
+
+    # 按页码顺序合并
+    for page in sorted(page_results.keys()):
+        all_chapters.extend(page_results[page])
+
+    return all_chapters
+
+
 def handle_command(command: dict) -> dict:
     """处理命令"""
     cmd = command.get("cmd")
@@ -332,16 +493,42 @@ def handle_command(command: dict) -> dict:
 
         elif cmd == "info":
             url = command["url"]
+            site = command.get("site", "ixdzs8")
             html = fetch_html(url)
-            info = extract_info(html, url)
+            if site == "boquge":
+                info = extract_boquge_info(html, url)
+            else:
+                info = extract_info(html, url)
             result.update({"success": True, "info": info})
 
         elif cmd == "chapter":
             url = command["url"]
             referer = command.get("referer")
+            site = command.get("site", "ixdzs8")
             html = fetch_html(url, referer)
-            chapter = extract_chapter(html)
+            if site == "boquge":
+                chapter = extract_boquge_chapter(html)
+            else:
+                chapter = extract_chapter(html)
             result.update({"success": True, "chapter": chapter})
+
+        elif cmd == "chapter_list":
+            # 笔趣阁章节列表（并发获取）
+            url = command["url"]
+            site = command.get("site", "boquge")
+            if site == "boquge":
+                book_id_match = re.search(r"/wapbook/(\d+)\.html", url)
+                if not book_id_match:
+                    raise ValueError(f"无法从 URL 提取书籍 ID: {url}")
+                book_id = book_id_match.group(1)
+                base_url = "https://m.boquge.com"
+                max_workers = command.get("maxWorkers", 8)
+                chapters = fetch_boquge_chapter_list(base_url, book_id, max_workers)
+                result.update({"success": True, "chapters": chapters})
+            else:
+                result.update(
+                    {"success": False, "error": f"chapter_list 不支持站点: {site}"}
+                )
 
         elif cmd == "download":
             url = command["url"]
