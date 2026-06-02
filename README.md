@@ -205,7 +205,7 @@ TerminalReader/
 │   │   └── toast.go     # Toast notification
 │   └── crawler/         # Crawler engine
 │       ├── crawler.go   # Engine & interfaces
-│       ├── ixdzs8.go    # 爱下电子书 source implementation
+│       ├── ixdzs8.go    # source one implementation
 │       └── ixdzs8_test.go
 ├── pkg/
 │   └── logger/          # Logging package
