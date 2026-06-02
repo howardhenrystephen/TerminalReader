@@ -56,3 +56,7 @@ temp/
 
 # Markdown
 tech-spec.md
+
+# VHS
+*.tape
+*.mp4
