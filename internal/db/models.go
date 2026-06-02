@@ -45,3 +45,12 @@ type CrawlTask struct {
 	SourceURL  string
 	SourceSite string
 }
+
+// BookSource 表示书籍来源跟踪信息
+type BookSource struct {
+	BookID             int64
+	SourceURL          string
+	SourceName         string
+	LastCrawledChapter int
+	UpdatedAt          time.Time
+}

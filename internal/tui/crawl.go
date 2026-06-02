@@ -321,7 +321,7 @@ func (m CrawlModel) MiniView() string {
 		lipgloss.Top,
 		bar,
 		" ",
-		lipgloss.NewStyle().Foreground(lipgloss.Color(ColorSubtext)).Render(fmt.Sprintf("%s · %s · %d/%d · s:stop", status, elapsed, m.currentCh, m.totalCh)),
+		lipgloss.NewStyle().Foreground(lipgloss.Color(ColorSubtext)).Render(fmt.Sprintf("%s · %s · %d/%d · x:stop", status, elapsed, m.currentCh, m.totalCh)),
 	)
 
 	return indent + line

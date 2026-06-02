@@ -369,6 +369,10 @@ func (e *Engine) CrawlIxdzs8Book(ctx context.Context, sourceURL string, database
 		if err := database.UpdateBookTotalChapters(bookID, len(chapters)); err != nil {
 			logger.Warnf("[Crawler/ixdzs8] UpdateBookTotalChapters error: %v", err)
 		}
+		// 更新来源信息
+		if err := database.UpsertBookSource(bookID, sourceURL, src.Name(), startChapter); err != nil {
+			logger.Warnf("[Crawler/ixdzs8] UpsertBookSource error: %v", err)
+		}
 	} else {
 		// 不存在：创建新书
 		bookID, err = database.AddBook(bookInfo.Title, bookInfo.Author, bookInfo.Description, len(chapters), sourceURL, src.Name())
@@ -380,6 +384,10 @@ func (e *Engine) CrawlIxdzs8Book(ctx context.Context, sourceURL string, database
 		if err := database.CreateChapterTable(bookID); err != nil {
 			logger.Errorf("[Crawler/ixdzs8] CreateChapterTable error: %v", err)
 			return 0, fmt.Errorf("create chapter table failed: %w", err)
+		}
+		// 保存来源信息
+		if err := database.UpsertBookSource(bookID, sourceURL, src.Name(), 0); err != nil {
+			logger.Warnf("[Crawler/ixdzs8] UpsertBookSource error: %v", err)
 		}
 	}
 
@@ -517,7 +525,13 @@ func (e *Engine) CrawlIxdzs8Book(ctx context.Context, sourceURL string, database
 			Done:           true,
 		}
 	}
-	logger.Infof("[Crawler/ixdzs8] 爬取完成, bookID=%d, skipped=%d, fetched=%d, failed=%d", bookID, skipped, fetched, failed)
+	// 更新最后爬取章节数
+	finalCount, _ := database.GetChapterCount(bookID)
+	if err := database.UpsertBookSource(bookID, sourceURL, src.Name(), finalCount); err != nil {
+		logger.Warnf("[Crawler/ixdzs8] 更新来源最后章节失败: %v", err)
+	}
+
+	logger.Infof("[Crawler/ixdzs8] 爬取完成, bookID=%d, skipped=%d, fetched=%d, failed=%d, finalCount=%d", bookID, skipped, fetched, failed, finalCount)
 
 	return bookID, nil
 }

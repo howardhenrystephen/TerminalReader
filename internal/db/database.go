@@ -17,7 +17,8 @@ type DB struct {
 // InitDB 初始化数据库连接并执行迁移
 func InitDB(dbPath string) (*DB, error) {
 	logger.Infof("[DB] 打开数据库: %s", dbPath)
-	conn, err := sql.Open("sqlite", dbPath)
+	// 启用 WAL 模式和 busy timeout，避免并发读写时的 SQLITE_BUSY 错误
+	conn, err := sql.Open("sqlite", dbPath+"?_pragma=busy_timeout(5000)&_pragma=journal_mode(WAL)")
 	if err != nil {
 		logger.Errorf("[DB] 打开数据库失败: %v", err)
 		return nil, fmt.Errorf("open db: %w", err)
@@ -48,6 +49,9 @@ func (d *DB) Migrate() error {
 	}
 	if _, err := d.exec(sqlCreateBooksTrigger); err != nil {
 		return fmt.Errorf("create trigger: %w", err)
+	}
+	if _, err := d.exec(sqlCreateBookSourcesTable); err != nil {
+		return fmt.Errorf("create book_sources table: %w", err)
 	}
 	// 迁移：为旧数据库添加 pinned 列
 	if _, err := d.exec(`ALTER TABLE books ADD COLUMN pinned INTEGER DEFAULT 0;`); err != nil {

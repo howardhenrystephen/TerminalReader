@@ -31,6 +31,22 @@ BEGIN
 	UPDATE books SET updated_at = CURRENT_TIMESTAMP WHERE id = OLD.id;
 END;`
 
+const sqlCreateBookSourcesTable = `CREATE TABLE IF NOT EXISTS book_sources (
+	book_id INTEGER PRIMARY KEY,
+	source_url TEXT NOT NULL,
+	source_name TEXT,
+	last_crawled_chapter INTEGER DEFAULT 0,
+	updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+	FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
+);`
+
+const sqlUpsertBookSource = `INSERT INTO book_sources (book_id, source_url, source_name, last_crawled_chapter) VALUES (?, ?, ?, ?)
+ON CONFLICT(book_id) DO UPDATE SET source_url=excluded.source_url, source_name=excluded.source_name, last_crawled_chapter=excluded.last_crawled_chapter, updated_at=CURRENT_TIMESTAMP;`
+
+const sqlGetBookSource = `SELECT book_id, source_url, source_name, last_crawled_chapter, updated_at FROM book_sources WHERE book_id = ?;`
+
+const sqlUpdateLastCrawledChapter = `UPDATE book_sources SET last_crawled_chapter = ? WHERE book_id = ?;`
+
 const sqlListBooks = `SELECT id, title, author, description, total_chapters, current_chapter, current_offset, source_url, source_site, pinned, created_at, updated_at FROM books ORDER BY pinned DESC, updated_at DESC;`
 
 const sqlGetBook = `SELECT id, title, author, description, total_chapters, current_chapter, current_offset, source_url, source_site, pinned, created_at, updated_at FROM books WHERE id = ?;`
@@ -46,6 +62,8 @@ const sqlUpdateTotalChapters = `UPDATE books SET total_chapters = ? WHERE id = ?
 const sqlUpdatePin = `UPDATE books SET pinned = ? WHERE id = ?;`
 
 const sqlDeleteBook = `DELETE FROM books WHERE id = ?;`
+
+const sqlDeleteBookSource = `DELETE FROM book_sources WHERE book_id = ?;`
 
 // ListBooks 返回所有书籍
 func (d *DB) ListBooks() ([]Book, error) {
@@ -328,4 +346,42 @@ func firstLineOfContent(content string) string {
 		}
 	}
 	return ""
+}
+
+// UpsertBookSource 插入或更新书籍来源信息
+func (d *DB) UpsertBookSource(bookID int64, sourceURL, sourceName string, lastCrawledChapter int) error {
+	logger.Debugf("[DB] 更新书籍来源: bookID=%d, source=%s, lastChapter=%d", bookID, sourceName, lastCrawledChapter)
+	_, err := d.exec(sqlUpsertBookSource, bookID, sourceURL, sourceName, lastCrawledChapter)
+	if err != nil {
+		logger.Errorf("[DB] 更新书籍来源失败: bookID=%d, %v", bookID, err)
+	}
+	return err
+}
+
+// GetBookSource 获取书籍来源信息
+func (d *DB) GetBookSource(bookID int64) (*BookSource, error) {
+	logger.Debugf("[DB] 获取书籍来源: bookID=%d", bookID)
+	var bs BookSource
+	var updatedAt string
+	err := d.queryRow(sqlGetBookSource, bookID).Scan(&bs.BookID, &bs.SourceURL, &bs.SourceName, &bs.LastCrawledChapter, &updatedAt)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			logger.Debugf("[DB] 书籍来源不存在: bookID=%d", bookID)
+			return nil, nil
+		}
+		logger.Errorf("[DB] 获取书籍来源失败: bookID=%d, %v", bookID, err)
+		return nil, err
+	}
+	bs.UpdatedAt, _ = time.Parse(time.RFC3339, updatedAt)
+	return &bs, nil
+}
+
+// UpdateLastCrawledChapter 更新最后爬取章节
+func (d *DB) UpdateLastCrawledChapter(bookID int64, chapter int) error {
+	logger.Debugf("[DB] 更新最后爬取章节: bookID=%d, chapter=%d", bookID, chapter)
+	_, err := d.exec(sqlUpdateLastCrawledChapter, chapter, bookID)
+	if err != nil {
+		logger.Errorf("[DB] 更新最后爬取章节失败: bookID=%d, %v", bookID, err)
+	}
+	return err
 }

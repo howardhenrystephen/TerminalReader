@@ -112,7 +112,7 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			return m, nil
 		case StateBackgroundCrawling:
-			if keyMatches(msg, keyWithKeys("s")) {
+			if keyMatches(msg, BookshelfKeys.StopCrawl) {
 				logger.Infof("[TUI] 停止后台爬取")
 				m.crawl.Cancel()
 				m.state = StateBookshelf
@@ -144,6 +144,13 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			if keyMatches(msg, BookshelfKeys.Refresh) {
 				return m, m.bookshelf.LoadBooks()
+			}
+			if keyMatches(msg, BookshelfKeys.Redraw) {
+				logger.Debugf("[TUI] 强制刷新界面：清除 toast 和进度条")
+				m.bookshelf.toast = ""
+				m.bookshelf.toastIsError = false
+				m.crawl.state = CrawlHidden
+				return m, nil
 			}
 			bookshelf, bookshelfCmd := m.bookshelf.Update(msg)
 			m.bookshelf = bookshelf
@@ -264,6 +271,12 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.bookshelf.updateDescContent()
 		return m, nil
 
+	case ContinueCrawlMsg:
+		logger.Infof("[TUI] 继续下载: bookID=%d, source=%s", msg.BookID, msg.SourceName)
+		m.state = StateBackgroundCrawling
+		m.crawl.Start(msg.BookTitle, msg.SourceName, msg.SourceURL)
+		return m, m.crawl.crawlCmd()
+
 	case CloseBookDescMsg:
 		logger.Debugf("[TUI] 关闭书籍简介")
 		m.state = m.prevState
@@ -295,42 +308,45 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	// 透传给子组件
+	// 后台爬取任务可能在任何状态下运行，crawl 组件始终需要接收消息
+	var crawlCmd tea.Cmd
+	crawl, crawlCmd := m.crawl.Update(msg)
+	m.crawl = crawl
+
 	switch m.state {
 	case StateBookshelf:
 		bookshelf, cmd := m.bookshelf.Update(msg)
 		m.bookshelf = bookshelf
-		return m, cmd
+		return m, tea.Batch(cmd, crawlCmd)
 	case StateReader:
 		reader, cmd := m.reader.Update(msg)
 		m.reader = &reader
-		return m, cmd
+		return m, tea.Batch(cmd, crawlCmd)
 	case StateChapterPicker:
 		picker, cmd := m.chapterPicker.Update(msg)
 		m.chapterPicker = picker
-		return m, cmd
+		return m, tea.Batch(cmd, crawlCmd)
 	case StateSearch:
 		search, cmd := m.search.Update(msg)
 		m.search = search
-		return m, cmd
+		return m, tea.Batch(cmd, crawlCmd)
 	case StateConfirmCrawl, StateCrawling:
-		crawl, cmd := m.crawl.Update(msg)
-		m.crawl = crawl
-		return m, cmd
+		return m, crawlCmd
 	case StateBackgroundCrawling:
-		crawl, cmd := m.crawl.Update(msg)
-		m.crawl = crawl
-		return m, cmd
+		bookshelf, cmd := m.bookshelf.Update(msg)
+		m.bookshelf = bookshelf
+		return m, tea.Batch(cmd, crawlCmd)
 	case StateHelp:
 		help, cmd := m.help.Update(msg)
 		m.help = help
-		return m, cmd
+		return m, tea.Batch(cmd, crawlCmd)
 	case StateBookDesc:
 		bookshelf, cmd := m.bookshelf.Update(msg)
 		m.bookshelf = bookshelf
-		return m, cmd
+		return m, tea.Batch(cmd, crawlCmd)
 	}
 
-	return m, nil
+	return m, crawlCmd
 }
 
 // View 渲染主视图
@@ -420,7 +436,52 @@ func (m AppModel) handleBookshelfKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m, m.bookshelf.TogglePin()
 	}
 	if keyMatches(msg, BookshelfKeys.Redraw) {
-		logger.Debugf("[TUI] 强制刷新界面")
+		logger.Debugf("[TUI] 强制刷新界面：清除 toast 和进度条")
+		// 清除 bookshelf toast
+		m.bookshelf.toast = ""
+		m.bookshelf.toastIsError = false
+		// 强制隐藏 crawl 进度条
+		m.crawl.state = CrawlHidden
+		return m, nil
+	}
+	if keyMatches(msg, BookshelfKeys.Continue) {
+		book := m.bookshelf.SelectedBook()
+		if book == nil {
+			return m, nil
+		}
+		// 优先从 book_sources 表获取来源信息
+		bs, err := m.db.GetBookSource(book.ID)
+		if err != nil {
+			logger.Warnf("[TUI] 获取书籍来源失败: %v", err)
+			bookshelf, _ := m.bookshelf.Update(ShowToastMsg{Content: "Failed to get source info", IsError: true})
+			m.bookshelf = bookshelf
+			return m, nil
+		}
+		if bs != nil && bs.SourceURL != "" {
+			logger.Infof("[TUI] 继续下载(来自book_sources): %s", book.Title)
+			return m, func() tea.Msg {
+				return ContinueCrawlMsg{
+					BookID:     book.ID,
+					BookTitle:  book.Title,
+					SourceName: bs.SourceName,
+					SourceURL:  bs.SourceURL,
+				}
+			}
+		}
+		// 回退到 books 表的 source_url/source_site
+		if book.SourceURL != "" && book.SourceSite != "" {
+			logger.Infof("[TUI] 继续下载(来自books表): %s", book.Title)
+			return m, func() tea.Msg {
+				return ContinueCrawlMsg{
+					BookID:     book.ID,
+					BookTitle:  book.Title,
+					SourceName: book.SourceSite,
+					SourceURL:  book.SourceURL,
+				}
+			}
+		}
+		bookshelf, _ := m.bookshelf.Update(ShowToastMsg{Content: "No source URL available for this book", IsError: true})
+		m.bookshelf = bookshelf
 		return m, nil
 	}
 
@@ -661,6 +722,14 @@ type CloseBookDescMsg struct{}
 type ShowToastMsg struct {
 	Content string
 	IsError bool
+}
+
+// ContinueCrawlMsg 继续下载消息
+type ContinueCrawlMsg struct {
+	BookID     int64
+	BookTitle  string
+	SourceName string
+	SourceURL  string
 }
 
 func showToast(content string, isError bool) tea.Cmd {

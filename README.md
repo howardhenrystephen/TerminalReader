@@ -14,7 +14,7 @@ A terminal-based novel reader TUI app built with [Bubble Tea](https://github.com
 
 ## Star History
 
-<a href="https://www.star-history.com/?repos=howard%2FTerminalReader&type=timeline&logscale=&legend=bottom-right">
+<a href="https://www.star-history.com/?repos=howardhenrystephen%2FTerminalReader&type=timeline&logscale=&legend=bottom-right">
  <picture>
    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=howardhenrystephen/TerminalReader&type=timeline&theme=dark&logscale&legend=bottom-right" />
    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=howardhenrystephen/TerminalReader&type=timeline&logscale&legend=bottom-right" />
@@ -22,18 +22,18 @@ A terminal-based novel reader TUI app built with [Bubble Tea](https://github.com
  </picture>
 </a>
 
-
 ## Features
 
-- **Bookshelf Management**: Fancy-list style book list with navigation, open, delete, refresh, and pin support
+- **Bookshelf Management**: Fancy-list style book list with navigation, open, delete, refresh, pin/unpin, and book description view
 - **Terminal Reader**: Full-screen reading view with vim-style keybindings for scrolling and paging, auto-removes duplicate chapter titles
 - **Multi-source Search**: Concurrent search across multiple novel sites with availability markers
 - **Auto Crawling**: One-click full book download with real-time progress display and background download support
 - **Smart Updates**: Automatically append new chapters for existing books, avoiding duplicate downloads
+- **Continue Download**: Resume incremental downloads from the last crawled chapter with a single key press (`c`)
 - **Reading Position Save**: Auto-records chapter and character offset, resumes on next open
 - **Chapter Picker**: Filterable chapter list for quick jumps to any chapter
-- **Help**: Press `?` for program introduction
-- **Logging**: Full分级日志 (DEBUG/INFO/WARN/ERROR) with daily rotation, file-only output
+- **Help**: Press `?` for program introduction and keybindings reference
+- **Logging**: Full log levels (DEBUG/INFO/WARN/ERROR) with daily rotation, file-only output
 
 ## Installation
 
@@ -46,7 +46,7 @@ A terminal-based novel reader TUI app built with [Bubble Tea](https://github.com
 
 ```bash
 # Clone repository
-git clone https://github.com/howard/TerminalReader.git
+git clone https://github.com/howardhenrystephen/TerminalReader.git
 cd TerminalReader
 
 # Build
@@ -76,14 +76,15 @@ Launch to enter the bookshelf view showing your collection.
 |-----|--------|
 | `↑` / `k` | Move up |
 | `↓` / `j` | Move down |
-| `Enter` | Open book |
+| `Enter` / `l` | Open book |
 | `s` | Search new book |
+| `c` | Continue download (resume from last chapter) |
 | `d` | Delete book |
-| `r` | Refresh bookshelf |
 | `tab` | View book description |
 | `p` | Pin/unpin book |
 | `g` | Jump to top |
 | `G` | Jump to bottom |
+| `R` | Force redraw |
 | `?` | Show help |
 | `q` / `Ctrl+c` | Quit |
 
@@ -93,7 +94,7 @@ Launch to enter the bookshelf view showing your collection.
 |-----|--------|
 | `j` / `↓` | Scroll down one line |
 | `k` / `↑` | Scroll up one line |
-| `Space` / `f` | Page down |
+| `Space` / `f` / `PgDown` | Page down |
 | `b` / `PgUp` | Page up |
 | `g` | Jump to chapter start |
 | `G` | Jump to chapter end |
@@ -121,9 +122,18 @@ Launch to enter the bookshelf view showing your collection.
 4. Foreground shows real-time progress dialog, background shows mini progress bar at bookshelf bottom
 5. Book auto-adds to bookshelf when complete
 
+### Continue Download
+
+For books that already exist in your bookshelf, press `c` to resume downloading from the last chapter:
+
+- The app tracks the source URL and last crawled chapter in the `book_sources` table
+- If the source has new chapters, only the missing ones are downloaded (smart incremental update)
+- Downloads run in the background with a mini progress bar at the bottom of the bookshelf
+- On completion, the bookshelf auto-refreshes to show the updated chapter count
+
 ## Database Design
 
-SQLite storage, no extra configuration needed.
+SQLite storage, no extra configuration needed. Database file is auto-created on first run.
 
 ### Schema
 
@@ -140,10 +150,20 @@ SQLite storage, no extra configuration needed.
 | current_offset | Character offset in current chapter |
 | source_url | Crawl source URL |
 | source_site | Source site name |
-| pinned | Pinned status |
+| pinned | Pinned status (0/1) |
 | created_at / updated_at | Timestamps |
 
-**chapters_{book_id}** — Per-book chapter table
+**book_sources** — Book source tracking table
+
+| Column | Description |
+|--------|-------------|
+| book_id | FK to books.id |
+| source_url | Source URL for resuming downloads |
+| source_name | Source site name |
+| last_crawled_chapter | Last successfully downloaded chapter |
+| updated_at | Timestamp |
+
+**chapters_{book_id}** — Per-book chapter table (auto-created on first download)
 
 | Column | Description |
 |--------|-------------|
@@ -159,7 +179,7 @@ SQLite storage, no extra configuration needed.
 - [Bubble Tea](https://github.com/charmbracelet/bubbletea) — Go TUI framework
 - [Bubbles](https://github.com/charmbracelet/bubbles) — List, input, progress bar components
 - [Lipgloss](https://github.com/charmbracelet/lipgloss) — Terminal styling
-- [SQLite](https://sqlite.org/) — Local database (pure Go driver, no CGO)
+- [SQLite](https://sqlite.org/) — Local database (pure Go driver via modernc.org/sqlite, no CGO)
 - Python cloudscraper — Anti-bot crawler proxy
 
 ## Project Structure
@@ -169,31 +189,31 @@ TerminalReader/
 ├── main.go              # Entry point
 ├── internal/
 │   ├── db/              # Database layer
-│   │   ├── database.go
-│   │   ├── models.go
-│   │   └── queries.go
+│   │   ├── database.go  # DB init & migration
+│   │   ├── models.go    # Struct definitions
+│   │   └── queries.go   # SQL queries
 │   ├── tui/             # TUI view layer
-│   │   ├── app.go
-│   │   ├── styles.go
-│   │   ├── keys.go
-│   │   ├── bookshelf.go
-│   │   ├── reader.go
-│   │   ├── search.go
-│   │   ├── crawl.go
-│   │   ├── help.go
-│   │   ├── chapter_picker.go
-│   │   └── toast.go
+│   │   ├── app.go       # Main state machine & message routing
+│   │   ├── styles.go    # Color & style definitions
+│   │   ├── keys.go      # Keybindings
+│   │   ├── bookshelf.go # Bookshelf list view
+│   │   ├── reader.go    # Reading view
+│   │   ├── search.go    # Search input & results
+│   │   ├── crawl.go     # Download progress dialog
+│   │   ├── help.go      # Help/about page
+│   │   ├── chapter_picker.go # Chapter jump dialog
+│   │   └── toast.go     # Toast notification
 │   └── crawler/         # Crawler engine
-│       ├── crawler.go
-│       ├── ixdzs8.go
+│       ├── crawler.go   # Engine & interfaces
+│       ├── ixdzs8.go    # 爱下电子书 source implementation
 │       └── ixdzs8_test.go
 ├── pkg/
 │   └── logger/          # Logging package
-│       └── logger.go
+│       └── logger.go    # Daily rotation file logger
 ├── script/
-│   ├── spider.py        # Python crawler proxy
-│   ├── fix_chapter_order.py  # Fix chapter order script
-│   └── migrate_add_pinned.py # DB migration script
+│   ├── spider.py        # Python crawler proxy (cloudscraper)
+│   ├── fix_chapter_order.py
+│   └── migrate_add_pinned.py
 ├── data/
 │   └── novels.db        # SQLite database (runtime generated)
 ├── log/                 # Log directory (daily rotation, runtime generated)

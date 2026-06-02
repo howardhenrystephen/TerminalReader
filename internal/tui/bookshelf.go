@@ -131,7 +131,7 @@ func (m BookshelfModel) Update(msg tea.Msg) (BookshelfModel, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
-		m.list.SetSize(msg.Width, msg.Height-3)
+		m.list.SetSize(msg.Width, msg.Height-4)
 	case pinToggledMsg:
 		// 置顶状态切换后，重新加载书籍列表以更新排序和标记
 		return m, m.LoadBooks()
@@ -175,18 +175,23 @@ func (m BookshelfModel) ViewWithMini(miniView string) string {
 		{key: "↓/j", desc: "down"},
 		{key: "enter", desc: "open"},
 		{key: "s", desc: "search"},
+		{key: "c", desc: "continue"},
 		{key: "d", desc: "delete"},
 		{key: "tab", desc: "desc"},
 		{key: "p", desc: "pin"},
 		{key: "?", desc: "help"},
-		{key: "R", desc: "redraw"},
+		{key: "r", desc: "redraw"},
 		{key: "q", desc: "quit"},
+	}
+	// 如果有后台下载，在 footer 中显示停止键提示
+	if miniView != "" {
+		footerItems = append([]footerItem{{key: "x", desc: "stop"}}, footerItems...)
 	}
 	footer := renderFooter(footerItems, m.width)
 
-	// 底部固定区域：footer + 2行预留空间（toast + miniView）
+	// 底部固定区域：footer(2行) + toast行(1) + miniView行(1)
 	// 不管有没有 toast/miniView，始终预留2行，保证UI不变形
-	bottomHeight := 3 // footer(1) + toast行(1) + miniView行(1)
+	bottomHeight := 4 // footer(2) + toast(1) + miniView(1)
 
 	// list 固定高度
 	listHeight := m.height - bottomHeight
@@ -196,6 +201,9 @@ func (m BookshelfModel) ViewWithMini(miniView string) string {
 	// list 组件本身包含标题，需要额外给标题留空间
 	m.list.SetSize(m.width, listHeight)
 	listView = m.list.View()
+
+	// 重新渲染 footer，此时 list 已占用正确高度
+	footer = renderFooter(footerItems, m.width)
 
 	// 构建 toast（放在 footer 下方第一行）
 	toastView := ""
@@ -335,7 +343,7 @@ func (m *BookshelfModel) TogglePin() tea.Cmd {
 func (m *BookshelfModel) SetSize(width, height int) {
 	m.width = width
 	m.height = height
-	m.list.SetSize(width, height-2)
+	m.list.SetSize(width, height-4)
 }
 
 // bookshelfLoadedMsg 内部消息

@@ -22,17 +22,19 @@ var GlobalKeys = GlobalKeyMap{
 
 // BookshelfKeyMap 书架快捷键
 type BookshelfKeyMap struct {
-	Up       key.Binding
-	Down     key.Binding
-	Enter    key.Binding
-	Search   key.Binding
-	Delete   key.Binding
-	Refresh  key.Binding
-	GoTop    key.Binding
-	GoBottom key.Binding
-	Desc     key.Binding
-	Pin      key.Binding
-	Redraw   key.Binding
+	Up        key.Binding
+	Down      key.Binding
+	Enter     key.Binding
+	Search    key.Binding
+	Delete    key.Binding
+	Refresh   key.Binding
+	GoTop     key.Binding
+	GoBottom  key.Binding
+	Desc      key.Binding
+	Pin       key.Binding
+	Redraw    key.Binding
+	Continue  key.Binding
+	StopCrawl key.Binding
 }
 
 // BookshelfKeys 书架快捷键实例
@@ -58,8 +60,8 @@ var BookshelfKeys = BookshelfKeyMap{
 		key.WithHelp("d", "delete"),
 	),
 	Refresh: key.NewBinding(
-		key.WithKeys("r"),
-		key.WithHelp("r", "refresh"),
+		key.WithKeys("m"),
+		key.WithHelp("m", "refresh"),
 	),
 	GoTop: key.NewBinding(
 		key.WithKeys("g"),
@@ -78,8 +80,16 @@ var BookshelfKeys = BookshelfKeyMap{
 		key.WithHelp("p", "pin"),
 	),
 	Redraw: key.NewBinding(
-		key.WithKeys("R"),
-		key.WithHelp("R", "redraw"),
+		key.WithKeys("r"),
+		key.WithHelp("r", "redraw"),
+	),
+	Continue: key.NewBinding(
+		key.WithKeys("c"),
+		key.WithHelp("c", "continue download"),
+	),
+	StopCrawl: key.NewBinding(
+		key.WithKeys("x"),
+		key.WithHelp("x", "stop download"),
 	),
 }
 
