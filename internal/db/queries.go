@@ -69,6 +69,8 @@ func (d *DB) ListBooks() ([]Book, error) {
 		b.Pinned = pinned != 0
 		b.CreatedAt, _ = time.Parse(time.RFC3339, createdAt)
 		b.UpdatedAt, _ = time.Parse(time.RFC3339, updatedAt)
+		// 查询已下载章节数
+		b.DownloadedChapters, _ = d.GetChapterCount(b.ID)
 		books = append(books, b)
 	}
 	logger.Debugf("[DB] 查询到 %d 本书", len(books))

@@ -3,6 +3,7 @@ package tui
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/viewport"
@@ -32,13 +33,18 @@ func (b BookItem) Title() string {
 	return b.book.Title
 }
 
-// Description 返回描述（两行：作者+进度+时间，简介）
+// Description 返回描述（两行：作者+进度+已下载+时间，简介）
 func (b BookItem) Description() string {
 	progress := ""
 	if b.book.TotalChapters > 0 {
 		progress = fmt.Sprintf("Ch %d/%d", b.book.CurrentChapter, b.book.TotalChapters)
 	} else {
 		progress = fmt.Sprintf("Ch %d", b.book.CurrentChapter)
+	}
+	// 已下载章节数
+	downloaded := ""
+	if b.book.DownloadedChapters > 0 {
+		downloaded = fmt.Sprintf("DL %d", b.book.DownloadedChapters)
 	}
 	readAt := b.book.UpdatedAt.Format("2006-01-02")
 	if b.book.UpdatedAt.IsZero() {
@@ -47,6 +53,9 @@ func (b BookItem) Description() string {
 	line1 := progress
 	if b.book.Author != "" {
 		line1 = b.book.Author + " · " + line1
+	}
+	if downloaded != "" {
+		line1 += " · " + downloaded
 	}
 	line1 += " · " + readAt
 
@@ -65,6 +74,8 @@ type BookshelfModel struct {
 	width        int
 	height       int
 	descViewport viewport.Model
+	toast        string
+	toastIsError bool
 }
 
 // NewBookshelfModel 创建书架模型
@@ -120,10 +131,28 @@ func (m BookshelfModel) Update(msg tea.Msg) (BookshelfModel, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
-		m.list.SetSize(msg.Width, msg.Height-4)
+		m.list.SetSize(msg.Width, msg.Height-3)
 	case pinToggledMsg:
 		// 置顶状态切换后，重新加载书籍列表以更新排序和标记
 		return m, m.LoadBooks()
+	case ShowToastMsg:
+		m.toast = msg.Content
+		m.toastIsError = msg.IsError
+		// 1.5秒后自动清除 toast，并触发强制刷新
+		return m, tea.Batch(
+			func() tea.Msg {
+				time.Sleep(1500 * time.Millisecond)
+				return clearBookshelfToastMsg{}
+			},
+			func() tea.Msg {
+				time.Sleep(1500 * time.Millisecond)
+				return forceRefreshMsg{}
+			},
+		)
+	case clearBookshelfToastMsg:
+		m.toast = ""
+	case forceRefreshMsg:
+		// 强制刷新，触发重新渲染
 	}
 
 	var cmd tea.Cmd
@@ -150,30 +179,60 @@ func (m BookshelfModel) ViewWithMini(miniView string) string {
 		{key: "tab", desc: "desc"},
 		{key: "p", desc: "pin"},
 		{key: "?", desc: "help"},
+		{key: "R", desc: "redraw"},
 		{key: "q", desc: "quit"},
 	}
 	footer := renderFooter(footerItems, m.width)
 
-	// list 固定高度，让 footer 紧贴最底部
-	listHeight := m.height - 2
-	if miniView != "" {
-		listHeight = m.height - 3
-	}
+	// 底部固定区域：footer + 2行预留空间（toast + miniView）
+	// 不管有没有 toast/miniView，始终预留2行，保证UI不变形
+	bottomHeight := 3 // footer(1) + toast行(1) + miniView行(1)
+
+	// list 固定高度
+	listHeight := m.height - bottomHeight
 	if listHeight < 1 {
 		listHeight = 1
 	}
-	listView = lipgloss.NewStyle().Height(listHeight).Render(listView)
+	// list 组件本身包含标题，需要额外给标题留空间
+	m.list.SetSize(m.width, listHeight)
+	listView = m.list.View()
 
-	// 如果有迷你进度条，放在 footer 下方单独一行
-	var content string
-	if miniView != "" {
-		content = lipgloss.JoinVertical(lipgloss.Left, listView, footer, miniView)
+	// 构建 toast（放在 footer 下方第一行）
+	toastView := ""
+	if m.toast != "" {
+		if m.toastIsError {
+			toastView = ToastErrorStyle.Render(m.toast)
+		} else {
+			toastView = ToastSuccessStyle.Render(m.toast)
+		}
 	} else {
-		content = lipgloss.JoinVertical(lipgloss.Left, listView, footer)
+		// 没有 toast 时填充空白行
+		toastView = strings.Repeat(" ", m.width)
 	}
-	return lipgloss.NewStyle().
-		Width(m.width).Height(m.height).
-		Render(lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Top, content))
+
+	// 没有 miniView 时填充空白行
+	if miniView == "" {
+		miniView = strings.Repeat(" ", m.width)
+	}
+
+	// 组装内容：list + footer + toast + miniView
+	content := lipgloss.JoinVertical(lipgloss.Left, listView, footer, toastView, miniView)
+
+	// 手动构建全屏输出，确保恰好 m.height 行
+	contentLines := strings.Split(content, "\n")
+	contentHeight := len(contentLines)
+	paddingBottom := m.height - contentHeight
+	if paddingBottom < 0 {
+		paddingBottom = 0
+	}
+
+	blankLine := strings.Repeat(" ", m.width)
+	var result []string
+	result = append(result, contentLines...)
+	for i := 0; i < paddingBottom; i++ {
+		result = append(result, blankLine)
+	}
+	return strings.Join(result, "\n")
 }
 
 // ViewDescFull 渲染全屏书籍简介视图
@@ -196,7 +255,7 @@ func (m BookshelfModel) ViewDescFull(width, height int) string {
 	}
 	metaParts = append(metaParts, fmt.Sprintf("Current: Ch %d", book.CurrentChapter))
 	if book.Pinned {
-		metaParts = append(metaParts, "📌 Pinned")
+		metaParts = append(metaParts, "+ Pinned")
 	}
 	metaLine := lipgloss.NewStyle().
 		Foreground(lipgloss.Color(ColorSubtext)).
@@ -289,6 +348,9 @@ type pinToggledMsg struct {
 	bookID int64
 	pinned bool
 }
+
+// clearBookshelfToastMsg 清除书架 toast 消息
+type clearBookshelfToastMsg struct{}
 
 func newBookDelegate() list.DefaultDelegate {
 	d := list.NewDefaultDelegate()

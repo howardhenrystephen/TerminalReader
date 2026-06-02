@@ -103,7 +103,7 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case StateConfirmCrawl:
 			return m.handleConfirmCrawlKeys(msg)
 		case StateCrawling:
-			if keyMatches(msg, keyWithKeys("esc")) {
+			if keyMatches(msg, keyWithKeys("esc", "enter")) {
 				m.state = StateBookshelf
 				return m, nil
 			}
@@ -112,6 +112,15 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			return m, nil
 		case StateBackgroundCrawling:
+			if keyMatches(msg, keyWithKeys("s")) {
+				logger.Infof("[TUI] 停止后台爬取")
+				m.crawl.Cancel()
+				m.state = StateBookshelf
+				// 先发送 toast 给 bookshelf，再切换状态
+				bookshelf, _ := m.bookshelf.Update(ShowToastMsg{Content: "Download stopped", IsError: false})
+				m.bookshelf = bookshelf
+				return m, m.bookshelf.LoadBooks()
+			}
 			if keyMatches(msg, GlobalKeys.Quit) {
 				m.crawl.Cancel()
 				return m, tea.Quit
@@ -204,18 +213,33 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		crawlModel, cmd := m.crawl.Update(msg)
 		m.crawl = crawlModel
 		wasBackground := m.state == StateBackgroundCrawling
-		m.state = StateCrawling
 		var cmds []tea.Cmd
 		if msg.Progress.Error != nil {
 			logger.Errorf("[TUI] 爬取失败: %v", msg.Progress.Error)
-			cmds = append(cmds, showToast("Download failed: "+msg.Progress.Error.Error(), true))
+			if wasBackground {
+				bookshelf, _ := m.bookshelf.Update(ShowToastMsg{Content: "Download failed: " + msg.Progress.Error.Error(), IsError: true})
+				m.bookshelf = bookshelf
+				m.state = StateBookshelf
+				cmds = append(cmds, m.bookshelf.LoadBooks())
+			} else {
+				m.state = StateBookshelf
+				bookshelf, _ := m.bookshelf.Update(ShowToastMsg{Content: "Download failed: " + msg.Progress.Error.Error(), IsError: true})
+				m.bookshelf = bookshelf
+				cmds = append(cmds, m.bookshelf.LoadBooks())
+			}
 		} else {
 			logger.Infof("[TUI] 爬取完成")
-			cmds = append(cmds, showToast("Download complete", false))
-			cmds = append(cmds, m.bookshelf.LoadBooks())
-		}
-		if wasBackground {
-			m.state = StateBookshelf
+			if wasBackground {
+				bookshelf, _ := m.bookshelf.Update(ShowToastMsg{Content: "Download complete", IsError: false})
+				m.bookshelf = bookshelf
+				m.state = StateBookshelf
+				cmds = append(cmds, m.bookshelf.LoadBooks())
+			} else {
+				m.state = StateBookshelf
+				bookshelf, _ := m.bookshelf.Update(ShowToastMsg{Content: "Download complete", IsError: false})
+				m.bookshelf = bookshelf
+				cmds = append(cmds, m.bookshelf.LoadBooks())
+			}
 		}
 		return m, tea.Batch(append(cmds, cmd)...)
 
@@ -253,6 +277,12 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			logger.Warnf("[TUI] Toast错误: %s", msg.Content)
 		} else {
 			logger.Debugf("[TUI] Toast: %s", msg.Content)
+		}
+		// 书架状态下，toast 由 bookshelf 自己渲染，不通过 AppModel 的 toast
+		if m.state == StateBookshelf || m.state == StateBackgroundCrawling {
+			bookshelf, _ := m.bookshelf.Update(msg)
+			m.bookshelf = bookshelf
+			return m, nil
 		}
 		m.toast = NewToast(msg.Content, msg.IsError)
 		if m.toastTimer != nil {
@@ -338,8 +368,8 @@ func (m AppModel) View() string {
 		content = m.bookshelf.ViewDescFull(m.width, m.height)
 	}
 
-	// 叠加 Toast
-	if m.toast.Visible {
+	// 叠加 Toast（非书架状态下）
+	if m.toast.Visible && m.state != StateBookshelf && m.state != StateBackgroundCrawling {
 		toastView := m.toast.View()
 		content = lipgloss.JoinVertical(lipgloss.Left, content, toastView)
 	}
@@ -379,12 +409,19 @@ func (m AppModel) handleBookshelfKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m, m.bookshelf.LoadBooks()
 	}
 	if keyMatches(msg, BookshelfKeys.Desc) {
-		logger.Debugf("[TUI] 显示书籍简介")
-		return m, func() tea.Msg { return ShowBookDescMsg{} }
+		if m.bookshelf.SelectedBook() != nil {
+			logger.Debugf("[TUI] 显示书籍简介")
+			return m, func() tea.Msg { return ShowBookDescMsg{} }
+		}
+		return m, nil
 	}
 	if keyMatches(msg, BookshelfKeys.Pin) {
 		logger.Debugf("[TUI] 切换置顶")
 		return m, m.bookshelf.TogglePin()
+	}
+	if keyMatches(msg, BookshelfKeys.Redraw) {
+		logger.Debugf("[TUI] 强制刷新界面")
+		return m, nil
 	}
 
 	bookshelf, cmd := m.bookshelf.Update(msg)

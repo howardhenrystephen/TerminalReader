@@ -4,18 +4,19 @@ import "time"
 
 // Book 表示一本书的元信息
 type Book struct {
-	ID             int64
-	Title          string
-	Author         string
-	Description    string
-	TotalChapters  int
-	CurrentChapter int
-	CurrentOffset  int
-	SourceURL      string
-	SourceSite     string
-	Pinned         bool
-	CreatedAt      time.Time
-	UpdatedAt      time.Time
+	ID                 int64
+	Title              string
+	Author             string
+	Description        string
+	TotalChapters      int
+	CurrentChapter     int
+	CurrentOffset      int
+	DownloadedChapters int
+	SourceURL          string
+	SourceSite         string
+	Pinned             bool
+	CreatedAt          time.Time
+	UpdatedAt          time.Time
 }
 
 // Chapter 表示单章内容

@@ -32,6 +32,7 @@ type BookshelfKeyMap struct {
 	GoBottom key.Binding
 	Desc     key.Binding
 	Pin      key.Binding
+	Redraw   key.Binding
 }
 
 // BookshelfKeys 书架快捷键实例
@@ -75,6 +76,10 @@ var BookshelfKeys = BookshelfKeyMap{
 	Pin: key.NewBinding(
 		key.WithKeys("p"),
 		key.WithHelp("p", "pin"),
+	),
+	Redraw: key.NewBinding(
+		key.WithKeys("R"),
+		key.WithHelp("R", "redraw"),
 	),
 }
 

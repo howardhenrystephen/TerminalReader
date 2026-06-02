@@ -22,6 +22,7 @@ const (
 	CrawlConfirm CrawlDialogState = iota
 	CrawlProgressing
 	CrawlFinished
+	CrawlHidden // 1.5s后隐藏进度条
 )
 
 // CrawlModel 爬取弹窗模型
@@ -54,7 +55,7 @@ type CrawlModel struct {
 func NewCrawlModel(database *db.DB, engine *crawler.Engine) *CrawlModel {
 	pb := progress.New(
 		progress.WithDefaultGradient(),
-		progress.WithWidth(20),
+		progress.WithWidth(120),
 	)
 	pb.ShowPercentage = false
 
@@ -195,7 +196,20 @@ func (m CrawlModel) Update(msg tea.Msg) (CrawlModel, tea.Cmd) {
 		// 停止秒表
 		swCmd := m.stopwatch.Stop()
 		cmds = append(cmds, swCmd)
+		// 1.5秒后隐藏进度条，并触发强制刷新
+		cmds = append(cmds, func() tea.Msg {
+			time.Sleep(1500 * time.Millisecond)
+			return crawlHideMsg{}
+		})
+		cmds = append(cmds, func() tea.Msg {
+			time.Sleep(1500 * time.Millisecond)
+			return forceRefreshMsg{}
+		})
 		return m, tea.Batch(cmds...)
+	case crawlHideMsg:
+		m.state = CrawlHidden
+	case forceRefreshMsg:
+		// 强制刷新，触发重新渲染
 	}
 
 	// 更新 bubbles 组件
@@ -277,9 +291,13 @@ func (m CrawlModel) View() string {
 	return ""
 }
 
-// MiniView 返回后台下载的迷你进度条（单行，显示在 help 下方）
+// MiniView 返回后台下载的迷你进度条（显示在 footer 下方）
 func (m CrawlModel) MiniView() string {
 	if m.state != CrawlProgressing && m.state != CrawlFinished {
+		return ""
+	}
+	// 如果已经完成超过1.5秒（状态变为CrawlHidden），不显示
+	if m.state == CrawlHidden {
 		return ""
 	}
 
@@ -297,17 +315,16 @@ func (m CrawlModel) MiniView() string {
 		status = fmt.Sprintf("%.0f%%", m.progress)
 	}
 
-	// 单行紧凑显示：▼ 书名 | 进度条 | 状态 时间 章节
+	// 缩进显示，进度条更长更细
+	indent := " "
 	line := lipgloss.JoinHorizontal(
 		lipgloss.Top,
-		lipgloss.NewStyle().Foreground(lipgloss.Color(ColorAccent)).Bold(true).Render("▼ "+truncate(m.bookTitle, 16)),
-		"  ",
 		bar,
-		"  ",
-		fmt.Sprintf("%s  %s  %d/%d", status, elapsed, m.currentCh, m.totalCh),
+		" ",
+		lipgloss.NewStyle().Foreground(lipgloss.Color(ColorSubtext)).Render(fmt.Sprintf("%s · %s · %d/%d · s:stop", status, elapsed, m.currentCh, m.totalCh)),
 	)
 
-	return line
+	return indent + line
 }
 
 func truncate(s string, max int) string {
@@ -329,6 +346,10 @@ type crawlDoneMsg struct {
 }
 
 type crawlTickMsg struct{}
+
+type crawlHideMsg struct{}
+
+type forceRefreshMsg struct{}
 
 // Wait 等待爬取 goroutine 结束
 func (m *CrawlModel) Wait() {
