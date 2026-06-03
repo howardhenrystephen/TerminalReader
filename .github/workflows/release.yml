@@ -23,10 +23,39 @@ jobs:
       - name: Build all platforms
         run: make build-all
 
+      - name: Package releases
+        run: |
+          mkdir -p release
+          # macOS Intel
+          mkdir -p dist/TerminalReader-darwin-amd64/script
+          cp dist/reader-darwin-amd64 dist/TerminalReader-darwin-amd64/reader
+          cp script/spider.py dist/TerminalReader-darwin-amd64/script/
+          tar czf release/TerminalReader-darwin-amd64.tar.gz -C dist TerminalReader-darwin-amd64
+          # macOS ARM64
+          mkdir -p dist/TerminalReader-darwin-arm64/script
+          cp dist/reader-darwin-arm64 dist/TerminalReader-darwin-arm64/reader
+          cp script/spider.py dist/TerminalReader-darwin-arm64/script/
+          tar czf release/TerminalReader-darwin-arm64.tar.gz -C dist TerminalReader-darwin-arm64
+          # Linux AMD64
+          mkdir -p dist/TerminalReader-linux-amd64/script
+          cp dist/reader-linux-amd64 dist/TerminalReader-linux-amd64/reader
+          cp script/spider.py dist/TerminalReader-linux-amd64/script/
+          tar czf release/TerminalReader-linux-amd64.tar.gz -C dist TerminalReader-linux-amd64
+          # Linux ARM64
+          mkdir -p dist/TerminalReader-linux-arm64/script
+          cp dist/reader-linux-arm64 dist/TerminalReader-linux-arm64/reader
+          cp script/spider.py dist/TerminalReader-linux-arm64/script/
+          tar czf release/TerminalReader-linux-arm64.tar.gz -C dist TerminalReader-linux-arm64
+          # Windows AMD64
+          mkdir -p dist/TerminalReader-windows-amd64/script
+          cp dist/reader-windows-amd64.exe dist/TerminalReader-windows-amd64/reader.exe
+          cp script/spider.py dist/TerminalReader-windows-amd64/script/
+          cd dist && zip -r ../release/TerminalReader-windows-amd64.zip TerminalReader-windows-amd64
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/*
+          files: release/*
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

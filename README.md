@@ -48,18 +48,19 @@ A terminal-based novel reader TUI app built with [Bubble Tea](https://github.com
 
 Get the latest release from [GitHub Releases](https://github.com/howardhenrystephen/TerminalReader/releases):
 
-| Platform | Architecture | Binary |
-|----------|-------------|--------|
-| macOS | Intel (x64) | `reader-darwin-amd64` |
-| macOS | Apple Silicon (M1/M2/M3) | `reader-darwin-arm64` |
-| Linux | x64 | `reader-linux-amd64` |
-| Linux | ARM64 | `reader-linux-arm64` |
-| Windows | x64 | `reader-windows-amd64.exe` |
+| Platform | Architecture | Package |
+|----------|-------------|---------|
+| macOS | Intel (x64) | `TerminalReader-darwin-amd64.tar.gz` |
+| macOS | Apple Silicon (M1/M2/M3) | `TerminalReader-darwin-arm64.tar.gz` |
+| Linux | x64 | `TerminalReader-linux-amd64.tar.gz` |
+| Linux | ARM64 | `TerminalReader-linux-arm64.tar.gz` |
+| Windows | x64 | `TerminalReader-windows-amd64.zip` |
 
 ```bash
 # Example: macOS Apple Silicon
-curl -L -o reader https://github.com/howardhenrystephen/TerminalReader/releases/latest/download/reader-darwin-arm64
-chmod +x reader
+curl -LO https://github.com/howardhenrystephen/TerminalReader/releases/latest/download/TerminalReader-darwin-arm64.tar.gz
+tar xzf TerminalReader-darwin-arm64.tar.gz
+cd TerminalReader-darwin-arm64
 ./reader
 ```
 
