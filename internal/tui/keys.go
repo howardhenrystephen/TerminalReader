@@ -56,8 +56,8 @@ var BookshelfKeys = BookshelfKeyMap{
 		key.WithHelp("s", "search"),
 	),
 	Delete: key.NewBinding(
-		key.WithKeys("d"),
-		key.WithHelp("d", "delete"),
+		key.WithKeys("d", "delete"),
+		key.WithHelp("d/del", "delete"),
 	),
 	Refresh: key.NewBinding(
 		key.WithKeys("m"),
