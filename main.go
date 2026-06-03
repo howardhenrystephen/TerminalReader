@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 
 	tea "github.com/charmbracelet/bubbletea"
 
@@ -14,6 +15,30 @@ import (
 	"github.com/henry/novel-reader/internal/tui"
 	"github.com/henry/novel-reader/pkg/logger"
 )
+
+// appDataDir 返回应用数据目录
+// macOS/Linux: ~/.config/terminalreader/
+// Windows: %APPDATA%\terminalreader\
+func appDataDir() string {
+	var base string
+	switch runtime.GOOS {
+	case "windows":
+		base = os.Getenv("APPDATA")
+		if base == "" {
+			base = os.Getenv("USERPROFILE")
+		}
+	case "darwin", "linux":
+		base = os.Getenv("HOME")
+		if base != "" {
+			base = filepath.Join(base, ".config")
+		}
+	}
+	if base == "" {
+		// fallback to current directory
+		base, _ = os.Getwd()
+	}
+	return filepath.Join(base, "terminalreader")
+}
 
 func checkPrerequisites() error {
 	// 检查 Python
@@ -53,13 +78,15 @@ func checkPrerequisites() error {
 }
 
 func main() {
+	appDir := appDataDir()
+
 	// 初始化日志系统
-	logDir := filepath.Join(".", "log")
+	logDir := filepath.Join(appDir, "log")
 	if err := logger.Init(logDir); err != nil {
 		fmt.Fprintf(os.Stderr, "初始化日志失败: %v\n", err)
 		os.Exit(1)
 	}
-	logger.Infof("程序启动")
+	logger.Infof("程序启动，数据目录: %s", appDir)
 
 	// 检查运行环境
 	if err := checkPrerequisites(); err != nil {
@@ -77,7 +104,7 @@ func main() {
 	flag.Parse()
 
 	if dbPath == "" {
-		dataDir := filepath.Join(".", "data")
+		dataDir := filepath.Join(appDir, "data")
 		if err := os.MkdirAll(dataDir, 0755); err != nil {
 			logger.Errorf("创建数据目录失败: %v", err)
 			os.Exit(1)
