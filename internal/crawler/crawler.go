@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"regexp"
 	"strings"
 	"time"
 
@@ -354,4 +355,29 @@ func consecutiveMatchBonus(a, b string) int {
 		return 8
 	}
 	return 0
+}
+
+// chapterTitleRe 匹配 "第X章 标题" 或 "第X章标题" 格式
+var chapterTitleRe = regexp.MustCompile(`^[第][零一二三四五六七八九十百千万亿\d]+[章]\s*(.*)$`)
+
+// isValidChapterTitle 检查标题是否符合 "第X章..." 格式
+func isValidChapterTitle(title string) bool {
+	return chapterTitleRe.MatchString(strings.TrimSpace(title))
+}
+
+// extractChapterTitle 从 content 第一行提取真实章节标题（去掉 "第X章" 前缀）。
+// 如果第一行不符合 "第X章" 格式，则返回第一行非空内容。
+func extractChapterTitle(content string) string {
+	lines := strings.Split(content, "\n")
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+		if m := chapterTitleRe.FindStringSubmatch(line); m != nil {
+			return strings.TrimSpace(m[1])
+		}
+		return line
+	}
+	return ""
 }

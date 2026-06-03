@@ -25,6 +25,7 @@ type Chapter struct {
 	ChapterNum int
 	Title      string
 	Content    string
+	SourceURL  string // 章节原始URL，如 p35.html
 	WordCount  int
 	CreatedAt  time.Time
 }

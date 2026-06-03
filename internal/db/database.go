@@ -63,20 +63,26 @@ func (d *DB) Migrate() error {
 
 // CreateChapterTable 为指定书籍创建章节表
 func (d *DB) CreateChapterTable(bookID int64) error {
-	logger.Infof("[DB] 创建章节表: %s", chapterTableName(bookID))
+	table := chapterTableName(bookID)
+	logger.Infof("[DB] 创建章节表: %s", table)
 	sql := fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		chapter_num INTEGER NOT NULL,
 		title TEXT NOT NULL,
 		content TEXT NOT NULL,
+		source_url TEXT,
 		word_count INTEGER DEFAULT 0,
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-	);`, chapterTableName(bookID))
-	_, err := d.exec(sql)
-	if err != nil {
+	);`, table)
+	if _, err := d.exec(sql); err != nil {
 		logger.Errorf("[DB] 创建章节表失败: %v", err)
+		return err
 	}
-	return err
+	// 迁移：为旧表添加 source_url 列
+	if _, err := d.exec(fmt.Sprintf("ALTER TABLE %s ADD COLUMN source_url TEXT;", table)); err != nil {
+		logger.Debugf("[DB] source_url 列可能已存在: %v", err)
+	}
+	return nil
 }
 
 // DropChapterTable 删除指定书籍的章节表

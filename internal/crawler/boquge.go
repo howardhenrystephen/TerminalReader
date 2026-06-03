@@ -201,7 +201,13 @@ func (b *BoqugeSource) FetchChapterContent(ctx context.Context, chapterURL strin
 
 	logger.Debugf("[Crawler/boquge] FetchChapterContent: title=%s contentLen=%d", title, len(content))
 	if title != "" && content != "" {
-		return title + "\n\n" + content, nil
+		fullContent := title + "\n\n" + content
+		// 检测标题是否符合 "第X章" 格式，不符合说明是错误页面
+		if !isValidChapterTitle(title) {
+			logger.Warnf("[Crawler/boquge] 章节标题格式异常，可能是错误页面: title=%s url=%s", title, chapterURL)
+			return "", fmt.Errorf("invalid chapter title: %s", title)
+		}
+		return fullContent, nil
 	}
 	return content, nil
 }
@@ -366,7 +372,7 @@ func (e *Engine) CrawlBoqugeBook(ctx context.Context, sourceURL string, database
 	results := make([]*boqugeChapterResult, len(toFetch))
 	received := 0
 	for res := range resultCh {
-		results[received] = &res
+		results[res.idx] = &res
 		received++
 		percentage := float64(received) / float64(len(toFetch)) * 100
 		if progressCh != nil {
@@ -386,11 +392,19 @@ func (e *Engine) CrawlBoqugeBook(ctx context.Context, sourceURL string, database
 		if res == nil {
 			continue
 		}
-		if res.err != nil {
-			failed++
-			continue
-		}
-		if res.content == "" {
+
+		// 爬取失败或内容为空，插入占位记录
+		if res.err != nil || res.content == "" {
+			placeholder := db.Chapter{
+				ChapterNum: res.ch.Num,
+				Title:      "不存在",
+				Content:    fmt.Sprintf("第%d章 不存在", res.ch.Num),
+				SourceURL:  res.ch.URL,
+				WordCount:  0,
+			}
+			if err := database.InsertChapter(bookID, placeholder); err != nil {
+				logger.Errorf("[Crawler/boquge] chapter %d placeholder insert error: %v", res.ch.Num, err)
+			}
 			failed++
 			continue
 		}
@@ -398,8 +412,9 @@ func (e *Engine) CrawlBoqugeBook(ctx context.Context, sourceURL string, database
 		wordCount := len([]rune(res.content))
 		chapter := db.Chapter{
 			ChapterNum: res.ch.Num,
-			Title:      res.ch.Title,
+			Title:      extractChapterTitle(res.content),
 			Content:    res.content,
+			SourceURL:  res.ch.URL,
 			WordCount:  wordCount,
 		}
 

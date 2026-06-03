@@ -21,12 +21,7 @@ type ChapterItem struct {
 
 func (c ChapterItem) FilterValue() string { return c.title }
 func (c ChapterItem) Title() string       { return fmt.Sprintf("Ch %d: %s", c.num, c.title) }
-func (c ChapterItem) Description() string {
-	if c.preview == "" {
-		return ""
-	}
-	return truncate(c.preview, 50)
-}
+func (c ChapterItem) Description() string { return "" }
 
 // ChapterPickerModel 章节选择弹窗模型
 type ChapterPickerModel struct {
@@ -157,11 +152,13 @@ func (m ChapterPickerModel) View() string {
 
 	// footer 和标题放在同一行
 	footer := renderFooter([]footerItem{
-		{key: "↑/k", desc: "up"},
-		{key: "↓/j", desc: "down"},
+		{key: "↑/k/w", desc: "up"},
+		{key: "↓/j/s", desc: "down"},
+		{key: "←/h", desc: "page up"},
+		{key: "→/l", desc: "page down"},
 		{key: "enter", desc: "jump"},
-		{key: "/", desc: "filter"},
-		{key: "esc", desc: "close"},
+		{key: "//f", desc: "filter"},
+		{key: "esc/q", desc: "close"},
 	}, 58)
 
 	filterHint := ""
@@ -197,20 +194,17 @@ func (m *ChapterPickerModel) SetSize(width, height int) {
 
 func newChapterDelegate() list.DefaultDelegate {
 	d := list.NewDefaultDelegate()
-	d.SetSpacing(0)
+	// 禁用 Description 渲染，实现单行显示
+	d.ShowDescription = false
+	d.SetSpacing(1) // 每项之间加1行空白间距
 	d.Styles.NormalTitle = lipgloss.NewStyle().
 		Foreground(lipgloss.Color(ColorText)).
-		Padding(0, 0, 0, 2)
-	d.Styles.NormalDesc = lipgloss.NewStyle().
-		Foreground(lipgloss.Color(ColorMuted)).
-		Padding(0, 0, 0, 2)
+		Padding(0, 1, 0, 2)
 	d.Styles.SelectedTitle = lipgloss.NewStyle().
 		Border(lipgloss.NormalBorder(), false, false, false, true).
 		BorderForeground(lipgloss.Color(ColorAccent)).
 		Foreground(lipgloss.Color(ColorAccent)).
-		Padding(0, 0, 0, 1)
-	d.Styles.SelectedDesc = d.Styles.SelectedTitle.Copy().
-		Foreground(lipgloss.Color(ColorSubtext))
+		Padding(0, 1, 0, 1)
 	return d
 }
 

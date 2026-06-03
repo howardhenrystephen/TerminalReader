@@ -24,6 +24,8 @@ const sqlCreateBooksTable = `CREATE TABLE IF NOT EXISTS books (
 	updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );`
 
+const sqlMigrateChapterSourceURL = `ALTER TABLE %s ADD COLUMN source_url TEXT;`
+
 const sqlCreateBooksTrigger = `CREATE TRIGGER IF NOT EXISTS update_books_updated_at
 AFTER UPDATE ON books
 FOR EACH ROW
@@ -202,8 +204,8 @@ func chapterTableName(bookID int64) string {
 // InsertChapter 插入单章（忽略已存在的章节）
 func (d *DB) InsertChapter(bookID int64, ch Chapter) error {
 	logger.Debugf("[DB] 插入章节: bookID=%d, chapterNum=%d, title=%s", bookID, ch.ChapterNum, ch.Title)
-	sql := fmt.Sprintf("INSERT OR IGNORE INTO %s (chapter_num, title, content, word_count) VALUES (?, ?, ?, ?);", chapterTableName(bookID))
-	_, err := d.exec(sql, ch.ChapterNum, ch.Title, ch.Content, ch.WordCount)
+	sql := fmt.Sprintf("INSERT OR IGNORE INTO %s (chapter_num, title, content, source_url, word_count) VALUES (?, ?, ?, ?, ?);", chapterTableName(bookID))
+	_, err := d.exec(sql, ch.ChapterNum, ch.Title, ch.Content, ch.SourceURL, ch.WordCount)
 	if err != nil {
 		logger.Errorf("[DB] 插入章节失败: bookID=%d, chapterNum=%d, %v", bookID, ch.ChapterNum, err)
 	}
@@ -221,14 +223,14 @@ func (d *DB) BulkInsertChapters(bookID int64, chapters []Chapter) error {
 	}
 	defer tx.Rollback()
 
-	stmt, err := tx.Prepare(fmt.Sprintf("INSERT INTO %s (chapter_num, title, content, word_count) VALUES (?, ?, ?, ?);", table))
+	stmt, err := tx.Prepare(fmt.Sprintf("INSERT INTO %s (chapter_num, title, content, source_url, word_count) VALUES (?, ?, ?, ?, ?);", table))
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
 
 	for _, ch := range chapters {
-		if _, err := stmt.Exec(ch.ChapterNum, ch.Title, ch.Content, ch.WordCount); err != nil {
+		if _, err := stmt.Exec(ch.ChapterNum, ch.Title, ch.Content, ch.SourceURL, ch.WordCount); err != nil {
 			return err
 		}
 	}
@@ -243,10 +245,10 @@ func (d *DB) BulkInsertChapters(bookID int64, chapters []Chapter) error {
 // GetChapter 获取指定章节
 func (d *DB) GetChapter(bookID int64, chapterNum int) (*Chapter, error) {
 	logger.Debugf("[DB] 获取章节: bookID=%d, chapterNum=%d", bookID, chapterNum)
-	query := fmt.Sprintf("SELECT id, chapter_num, title, content, word_count, created_at FROM %s WHERE chapter_num = ?;", chapterTableName(bookID))
+	query := fmt.Sprintf("SELECT id, chapter_num, title, content, source_url, word_count, created_at FROM %s WHERE chapter_num = ?;", chapterTableName(bookID))
 	var ch Chapter
 	var createdAt string
-	err := d.queryRow(query, chapterNum).Scan(&ch.ID, &ch.ChapterNum, &ch.Title, &ch.Content, &ch.WordCount, &createdAt)
+	err := d.queryRow(query, chapterNum).Scan(&ch.ID, &ch.ChapterNum, &ch.Title, &ch.Content, &ch.SourceURL, &ch.WordCount, &createdAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			logger.Debugf("[DB] 章节不存在: bookID=%d, chapterNum=%d", bookID, chapterNum)

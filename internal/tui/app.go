@@ -107,7 +107,15 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case StateConfirmCrawl:
 			return m.handleConfirmCrawlKeys(msg)
 		case StateCrawling:
-			if keyMatches(msg, keyWithKeys("esc", "enter")) {
+			if keyMatches(msg, keyWithKeys("esc")) {
+				logger.Infof("[TUI] 用户取消爬取")
+				m.crawl.Cancel()
+				m.state = StateBookshelf
+				bookshelf, _ := m.bookshelf.Update(ShowToastMsg{Content: "Download cancelled", IsError: false})
+				m.bookshelf = bookshelf
+				return m, m.bookshelf.LoadBooks()
+			}
+			if keyMatches(msg, keyWithKeys("enter")) {
 				m.state = StateBookshelf
 				return m, nil
 			}
@@ -307,7 +315,7 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.toastTimer != nil {
 			m.toastTimer.Stop()
 		}
-		m.toastTimer = time.AfterFunc(3*time.Second, func() {
+		m.toastTimer = time.AfterFunc(1*time.Second, func() {
 			m.toast.Clear()
 		})
 		return m, nil
@@ -542,7 +550,7 @@ func (m AppModel) handleReaderKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	}
 	if keyMatches(msg, ReaderKeys.NextChapter) {
 		logger.Debugf("[TUI] 下一章")
-		return m, m.reader.NextChapter()
+		return m, m.reader.NextChapter(m.reader.totalChapters)
 	}
 	if keyMatches(msg, ReaderKeys.PrevChapter) {
 		logger.Debugf("[TUI] 上一章")
@@ -746,6 +754,27 @@ func (m AppModel) handleChapterPickerKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.chapterPicker.Close()
 			return m, m.reader.loadChapterCmd(chNum)
 		}
+	}
+	// ←/→ 翻页：一次滚动9个条目
+	if keyMatches(msg, ChapterPickerKeys.PageUp) {
+		idx := m.chapterPicker.list.Index() - 9
+		if idx < 0 {
+			idx = 0
+		}
+		m.chapterPicker.list.Select(idx)
+		return m, nil
+	}
+	if keyMatches(msg, ChapterPickerKeys.PageDown) {
+		idx := m.chapterPicker.list.Index() + 9
+		maxIdx := len(m.chapterPicker.list.Items()) - 1
+		if maxIdx < 0 {
+			maxIdx = 0
+		}
+		if idx > maxIdx {
+			idx = maxIdx
+		}
+		m.chapterPicker.list.Select(idx)
+		return m, nil
 	}
 	picker, cmd := m.chapterPicker.Update(msg)
 	m.chapterPicker = picker

@@ -173,14 +173,14 @@ func (m BookshelfModel) ViewWithMini(miniView string) string {
 	footerItems := []footerItem{
 		{key: "↑/k", desc: "up"},
 		{key: "↓/j", desc: "down"},
-		{key: "enter", desc: "open"},
-		{key: "s", desc: "search"},
-		{key: "c", desc: "continue"},
-		{key: "d", desc: "delete"},
-		{key: "tab", desc: "desc"},
+		{key: "enter/l/o", desc: "open"},
+		{key: "s//", desc: "search"},
+		{key: "c/t", desc: "continue"},
+		{key: "d/x", desc: "delete"},
+		{key: "tab/i", desc: "desc"},
 		{key: "p", desc: "pin"},
 		{key: "?", desc: "help"},
-		{key: "r", desc: "redraw"},
+		{key: "m/r", desc: "refresh"},
 		{key: "q", desc: "quit"},
 	}
 	// 如果有后台下载，在 footer 中显示停止键提示
