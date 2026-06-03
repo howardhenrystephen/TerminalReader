@@ -13,7 +13,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"syscall"
 
 	"github.com/henry/novel-reader/internal/db"
 	"github.com/henry/novel-reader/pkg/logger"
@@ -70,10 +69,7 @@ func (i *Ixdzs8Source) spiderRequest(ctx context.Context, req map[string]interfa
 	cmd := exec.CommandContext(ctx, pythonCmd(), i.spiderPath)
 	logger.Debugf("[Crawler/ixdzs8] spiderRequest: exec=%s %s", pythonCmd(), i.spiderPath)
 
-	// 确保子进程在 context 取消时能被终止（进程组方式）
-	cmd.SysProcAttr = &syscall.SysProcAttr{
-		Setpgid: true,
-	}
+	setProcessGroup(cmd)
 
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
