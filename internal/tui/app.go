@@ -2,6 +2,9 @@ package tui
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+	"runtime"
 	"time"
 
 	"github.com/charmbracelet/bubbles/list"
@@ -27,6 +30,7 @@ const (
 	StateConfirmDelete
 	StateHelp
 	StateBookDesc
+	StateConfirmNuke
 )
 
 // AppModel 应用主模型
@@ -169,6 +173,8 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, cmd
 		case StateBookDesc:
 			return m.handleBookDescKeys(msg)
+		case StateConfirmNuke:
+			return m.handleConfirmNukeKeys(msg)
 		}
 
 	case OpenBookMsg:
@@ -382,6 +388,8 @@ func (m AppModel) View() string {
 		content = m.help.View()
 	case StateBookDesc:
 		content = m.bookshelf.ViewDescFull(m.width, m.height)
+	case StateConfirmNuke:
+		content = m.viewConfirmNuke()
 	}
 
 	// 叠加 Toast（非书架状态下）
@@ -418,6 +426,11 @@ func (m AppModel) handleBookshelfKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			logger.Infof("[TUI] 确认删除书籍: %s", book.Title)
 			m.state = StateConfirmDelete
 		}
+		return m, nil
+	}
+	if keyMatches(msg, BookshelfKeys.Nuke) {
+		logger.Infof("[TUI] 用户请求清除所有数据")
+		m.state = StateConfirmNuke
 		return m, nil
 	}
 	if keyMatches(msg, BookshelfKeys.Refresh) {
@@ -663,6 +676,54 @@ func (m AppModel) handleConfirmDeleteKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
+func (m AppModel) handleConfirmNukeKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	if keyMatches(msg, keyWithKeys("enter", "y")) {
+		logger.Infof("[TUI] 用户确认清除所有数据")
+		appDir := appDataDir()
+		// 关闭数据库连接以便删除文件
+		m.db.Close()
+		// 删除数据目录
+		if err := os.RemoveAll(appDir); err != nil {
+			logger.Errorf("[TUI] 清除数据失败: %v", err)
+			return m, tea.Batch(
+				showToast("Clear failed: "+err.Error(), true),
+				tea.Quit,
+			)
+		}
+		logger.Infof("[TUI] 数据已清除: %s", appDir)
+		return m, tea.Batch(
+			showToast("All data cleared. Goodbye!", false),
+			tea.Quit,
+		)
+	}
+	if keyMatches(msg, keyWithKeys("esc", "n")) {
+		m.state = StateBookshelf
+		return m, nil
+	}
+	return m, nil
+}
+
+// appDataDir 返回应用数据目录 (与 main.go 保持一致)
+func appDataDir() string {
+	var base string
+	switch runtime.GOOS {
+	case "windows":
+		base = os.Getenv("APPDATA")
+		if base == "" {
+			base = os.Getenv("USERPROFILE")
+		}
+	case "darwin", "linux":
+		base = os.Getenv("HOME")
+		if base != "" {
+			base = filepath.Join(base, ".config")
+		}
+	}
+	if base == "" {
+		base, _ = os.Getwd()
+	}
+	return filepath.Join(base, "terminalreader")
+}
+
 func (m AppModel) handleChapterPickerKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	// 如果 list 正在过滤中，esc 先取消过滤，而不是关闭选择器
 	if m.chapterPicker.list.FilterState() == list.FilterApplied {
@@ -709,6 +770,29 @@ func (m AppModel) viewConfirmDelete() string {
 		}, 48),
 	)
 	box := DialogBoxStyle.Width(50).Render(content)
+	return lipgloss.NewStyle().
+		Width(m.width).Height(m.height).
+		Render(lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, box))
+}
+
+func (m AppModel) viewConfirmNuke() string {
+	appDir := appDataDir()
+	content := lipgloss.JoinVertical(
+		lipgloss.Left,
+		TitleStyle.Render("⚠️  Clear All Data"),
+		"",
+		"This will delete EVERYTHING:",
+		fmt.Sprintf("  %s", appDir),
+		"",
+		"Including all books, chapters, logs, and settings.",
+		"This action CANNOT be undone.",
+		"",
+		renderFooter([]footerItem{
+			{key: "enter/y", desc: "confirm"},
+			{key: "esc/n", desc: "cancel"},
+		}, 48),
+	)
+	box := DialogBoxStyle.Width(56).Render(content)
 	return lipgloss.NewStyle().
 		Width(m.width).Height(m.height).
 		Render(lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, box))

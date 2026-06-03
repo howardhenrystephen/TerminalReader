@@ -35,6 +35,7 @@ type BookshelfKeyMap struct {
 	Redraw    key.Binding
 	Continue  key.Binding
 	StopCrawl key.Binding
+	Nuke      key.Binding
 }
 
 // BookshelfKeys 书架快捷键实例
@@ -90,6 +91,10 @@ var BookshelfKeys = BookshelfKeyMap{
 	StopCrawl: key.NewBinding(
 		key.WithKeys("x"),
 		key.WithHelp("x", "stop download"),
+	),
+	Nuke: key.NewBinding(
+		key.WithKeys("t"),
+		key.WithHelp("t", "clear all data"),
 	),
 }
 

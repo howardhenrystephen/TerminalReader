@@ -106,12 +106,13 @@ Launch to enter the bookshelf view showing your collection.
 | `Enter` / `l` | Open book |
 | `s` | Search new book |
 | `c` | Continue download (resume from last chapter) |
-| `d` | Delete book |
+| `d` / `Del` | Delete book |
 | `tab` | View book description |
 | `p` | Pin/unpin book |
 | `g` | Jump to top |
 | `G` | Jump to bottom |
 | `R` | Force redraw |
+| `t` | Clear all data (books, logs, settings) |
 | `?` | Show help |
 | `q` / `Ctrl+c` | Quit |
 
