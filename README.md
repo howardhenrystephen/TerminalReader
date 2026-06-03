@@ -39,18 +39,44 @@ A terminal-based novel reader TUI app built with [Bubble Tea](https://github.com
 
 ### Prerequisites
 
-- Go >= 1.21
 - Python 3 + cloudscraper (for crawler proxy)
+  ```bash
+  pip install cloudscraper
+  ```
+
+### Download Pre-built Binary
+
+Get the latest release from [GitHub Releases](https://github.com/howardhenrystephen/TerminalReader/releases):
+
+| Platform | Architecture | Binary |
+|----------|-------------|--------|
+| macOS | Intel (x64) | `reader-darwin-amd64` |
+| macOS | Apple Silicon (M1/M2/M3) | `reader-darwin-arm64` |
+| Linux | x64 | `reader-linux-amd64` |
+| Linux | ARM64 | `reader-linux-arm64` |
+| Windows | x64 | `reader-windows-amd64.exe` |
+
+```bash
+# Example: macOS Apple Silicon
+curl -L -o reader https://github.com/howardhenrystephen/TerminalReader/releases/latest/download/reader-darwin-arm64
+chmod +x reader
+./reader
+```
 
 ### Build from Source
+
+Requires Go >= 1.21:
 
 ```bash
 # Clone repository
 git clone https://github.com/howardhenrystephen/TerminalReader.git
 cd TerminalReader
 
-# Build
-go build -o reader ./main.go
+# Build current platform
+make build
+
+# Or build all platforms
+make build-all
 
 # Run
 ./reader
