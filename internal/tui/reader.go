@@ -104,11 +104,11 @@ func (m *ReaderModel) reflow() {
 }
 
 // stripChapterHeaders 删除内容开头的章节标题重复行
-// 匹配模式：第X章... 或 第X章...（中间有无空格或换行）
+// 匹配模式：第X章... / 第X集... / 第X集 第X章... 等
 func stripChapterHeaders(content string) string {
-	// 正则匹配 "第XXX章" 开头的行，支持中文数字和阿拉伯数字
-	// 匹配模式如：第1章、第一章、第100章、第一百章 等
-	re := regexp.MustCompile(`(?m)^[第][零一二三四五六七八九十百千万亿\d]+[章].*$`)
+	// 正则匹配 "第XXX章" 或 "第XXX集" 开头的行，支持中文数字和阿拉伯数字
+	// 匹配模式如：第1章、第一章、第100章、第一百章、第十一集 等
+	re := regexp.MustCompile(`(?m)^[第][零一二三四五六七八九十百千万亿\d]+[章集].*$`)
 
 	lines := strings.Split(content, "\n")
 	startIdx := 0
@@ -207,7 +207,7 @@ func (m ReaderModel) Update(msg tea.Msg) (ReaderModel, tea.Cmd) {
 				return m, showToastCmd("Already at the last chapter", false)
 			}
 			m.scrollDown()
-		case " ", "f", "pgdown":
+		case " ", "pgdown":
 			if m.atEndOfLastChapter() {
 				return m, showToastCmd("Already at the last chapter", false)
 			}
@@ -241,15 +241,17 @@ func (m ReaderModel) View() string {
 	body := ReaderTextStyle.Width(m.width).Render(content)
 
 	footer := renderFooter([]footerItem{
-		{key: "↑/k/w", desc: "up"},
-		{key: "↓/j/s", desc: "down"},
-		{key: "space/f/F", desc: "page"},
-		{key: "b/B", desc: "page up"},
-		{key: "←/h/H/p", desc: "prev"},
-		{key: "→/l/L/n", desc: "next"},
-		{key: "c/tab", desc: "chapters"},
-		{key: "g/G", desc: "start/end"},
-		{key: "esc/q", desc: "back"},
+		{key: "↑", desc: "up"},
+		{key: "↓", desc: "down"},
+		{key: "space", desc: "page"},
+		{key: "b", desc: "page up"},
+		{key: "←", desc: "prev"},
+		{key: "→", desc: "next"},
+		{key: "c", desc: "chapters"},
+		{key: "g", desc: "start"},
+		{key: "G", desc: "end"},
+		{key: "f", desc: "fill"},
+		{key: "esc", desc: "back"},
 		{key: "?", desc: "help"},
 	}, m.width)
 

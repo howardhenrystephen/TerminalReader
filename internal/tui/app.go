@@ -195,13 +195,25 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if keyMatches(msg, keyWithKeys("esc")) {
 				logger.Infof("[TUI] 用户取消补充缺章")
 				m.fillMissing.Cancel()
-				m.state = StateBookshelf
+				m.state = m.prevState
+				if m.state == StateFillMissing || m.state == StateFillMissingProgress {
+					m.state = StateBookshelf
+				}
+				if m.state == StateReader {
+					return m, nil
+				}
 				bookshelf, _ := m.bookshelf.Update(ShowToastMsg{Content: "Fill cancelled", IsError: false})
 				m.bookshelf = bookshelf
 				return m, m.bookshelf.LoadBooks()
 			}
 			if keyMatches(msg, keyWithKeys("enter")) {
-				m.state = StateBookshelf
+				m.state = m.prevState
+				if m.state == StateFillMissing || m.state == StateFillMissingProgress {
+					m.state = StateBookshelf
+				}
+				if m.state == StateReader {
+					return m, nil
+				}
 				return m, m.bookshelf.LoadBooks()
 			}
 			if keyMatches(msg, GlobalKeys.Quit) {
@@ -317,6 +329,13 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.fillMissing.Start(msg.Book)
 		return m, nil
 
+	case StartFillSingleMissingMsg:
+		logger.Infof("[TUI] 开始补充当前缺章: bookID=%d, chapterNum=%d", msg.BookID, msg.ChapterNum)
+		m.prevState = m.state
+		m.state = StateFillMissingProgress
+		m.fillMissing.StartSingle(msg.BookID, msg.ChapterNum)
+		return m, m.fillMissing.fillSingleMissingCmd(msg.BookID, msg.ChapterNum)
+
 	case fillMissingProgressMsg:
 		fillModel, cmd := m.fillMissing.Update(msg)
 		m.fillMissing = fillModel
@@ -355,7 +374,14 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case fillMissingHideMsg:
 		if m.state == StateFillMissingProgress {
-			m.state = StateBookshelf
+			nextState := m.prevState
+			if nextState == StateFillMissing || nextState == StateFillMissingProgress {
+				nextState = StateBookshelf
+			}
+			m.state = nextState
+			if m.state == StateReader {
+				return m, m.reader.loadChapterCmd(m.reader.chapterNum)
+			}
 			return m, m.bookshelf.LoadBooks()
 		}
 		return m, nil
@@ -402,6 +428,14 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	crawl, crawlCmd := m.crawl.Update(msg)
 	m.crawl = crawl
 
+	// 补充缺章进度状态也需要透传给 fillMissing 组件
+	var fillMissingCmd tea.Cmd
+	if m.state == StateFillMissingProgress {
+		fillModel, fcmd := m.fillMissing.Update(msg)
+		m.fillMissing = fillModel
+		fillMissingCmd = fcmd
+	}
+
 	switch m.state {
 	case StateBookshelf:
 		bookshelf, cmd := m.bookshelf.Update(msg)
@@ -433,6 +467,8 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		bookshelf, cmd := m.bookshelf.Update(msg)
 		m.bookshelf = bookshelf
 		return m, tea.Batch(cmd, crawlCmd)
+	case StateFillMissingProgress:
+		return m, tea.Batch(fillMissingCmd, crawlCmd)
 	}
 
 	return m, crawlCmd
@@ -475,6 +511,12 @@ func (m AppModel) View() string {
 		content = m.viewConfirmNuke()
 	case StateFillMissing, StateFillMissingProgress:
 		content = m.fillMissing.View()
+		// 如果 fillMissing 没有内容（单章补充直接进入进度状态），显示阅读器内容作为背景
+		if content == "" && m.state == StateFillMissingProgress {
+			if m.prevState == StateReader {
+				content = m.reader.View()
+			}
+		}
 	}
 
 	// 叠加 Toast（非书架状态下）
@@ -668,6 +710,12 @@ func (m AppModel) handleReaderKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	if keyMatches(msg, ReaderKeys.PrevChapter) {
 		logger.Debugf("[TUI] 上一章")
 		return m, m.reader.PrevChapter()
+	}
+	if keyMatches(msg, ReaderKeys.FillMissing) {
+		logger.Debugf("[TUI] 阅读器请求补充当前章")
+		return m, func() tea.Msg {
+			return StartFillSingleMissingMsg{BookID: m.reader.bookID, ChapterNum: m.reader.chapterNum}
+		}
 	}
 
 	reader, cmd := m.reader.Update(msg)
@@ -868,9 +916,9 @@ func (m AppModel) handleChapterPickerKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			return m, m.reader.loadChapterCmd(chNum)
 		}
 	}
-	// ←/→ 翻页：一次滚动9个条目
+	// ←/→ 翻页：一次滚动8个条目
 	if keyMatches(msg, ChapterPickerKeys.PageUp) {
-		idx := m.chapterPicker.list.Index() - 9
+		idx := m.chapterPicker.list.Index() - 8
 		if idx < 0 {
 			idx = 0
 		}
@@ -878,7 +926,7 @@ func (m AppModel) handleChapterPickerKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 	if keyMatches(msg, ChapterPickerKeys.PageDown) {
-		idx := m.chapterPicker.list.Index() + 9
+		idx := m.chapterPicker.list.Index() + 8
 		maxIdx := len(m.chapterPicker.list.Items()) - 1
 		if maxIdx < 0 {
 			maxIdx = 0
@@ -907,8 +955,8 @@ func (m AppModel) viewConfirmDelete() string {
 		fmt.Sprintf("Delete %q?", name),
 		"",
 		renderFooter([]footerItem{
-			{key: "enter/y", desc: "confirm"},
-			{key: "esc/n", desc: "cancel"},
+			{key: "enter", desc: "confirm"},
+			{key: "esc", desc: "cancel"},
 		}, 48),
 	)
 	box := DialogBoxStyle.Width(50).Render(content)
@@ -930,8 +978,8 @@ func (m AppModel) viewConfirmNuke() string {
 		"This action CANNOT be undone.",
 		"",
 		renderFooter([]footerItem{
-			{key: "enter/y", desc: "confirm"},
-			{key: "esc/n", desc: "cancel"},
+			{key: "enter", desc: "confirm"},
+			{key: "esc", desc: "cancel"},
 		}, 48),
 	)
 	box := DialogBoxStyle.Width(56).Render(content)

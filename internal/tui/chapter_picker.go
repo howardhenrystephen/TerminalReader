@@ -152,13 +152,13 @@ func (m ChapterPickerModel) View() string {
 
 	// footer 和标题放在同一行
 	footer := renderFooter([]footerItem{
-		{key: "↑/k/w", desc: "up"},
-		{key: "↓/j/s", desc: "down"},
-		{key: "←/h", desc: "page up"},
-		{key: "→/l", desc: "page down"},
+		{key: "↑", desc: "up"},
+		{key: "↓", desc: "down"},
+		{key: "←", desc: "page up"},
+		{key: "→", desc: "page down"},
 		{key: "enter", desc: "jump"},
-		{key: "//f", desc: "filter"},
-		{key: "esc/q", desc: "close"},
+		{key: "/", desc: "filter"},
+		{key: "esc", desc: "close"},
 	}, 58)
 
 	filterHint := ""

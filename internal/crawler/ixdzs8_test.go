@@ -56,7 +56,7 @@ func TestIxdzs8Fetch(t *testing.T) {
 
 	// 4. 测试获取章节内容
 	t.Run("FetchChapterContent", func(t *testing.T) {
-		content, err := src.FetchChapterContent(ctx, "https://ixdzs8.com/read/233763/p1.html")
+		content, err := src.FetchChapterContent(ctx, "https://ixdzs8.com/read/233763/p2.html")
 		if err != nil {
 			t.Fatalf("获取章节内容失败: %v", err)
 		}

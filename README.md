@@ -101,12 +101,12 @@ Launch to enter the bookshelf view showing your collection.
 
 | Key | Action |
 |-----|--------|
-| `↑` / `k` | Move up |
-| `↓` / `j` | Move down |
-| `Enter` / `l` | Open book |
+| `↑` | Move up |
+| `↓` | Move down |
+| `Enter` | Open book |
 | `s` | Search new book |
 | `c` | Continue download (resume from last chapter) |
-| `d` / `Del` | Delete book |
+| `d` | Delete book |
 | `tab` | View book description |
 | `p` | Pin/unpin book |
 | `g` | Jump to top |
@@ -114,30 +114,30 @@ Launch to enter the bookshelf view showing your collection.
 | `R` | Force redraw |
 | `t` | Clear all data (books, logs, settings) |
 | `?` | Show help |
-| `q` / `Ctrl+c` | Quit |
+| `q` | Quit |
 
 ### Reader View
 
 | Key | Action |
 |-----|--------|
-| `j` / `↓` | Scroll down one line |
-| `k` / `↑` | Scroll up one line |
-| `Space` / `f` / `PgDown` | Page down |
-| `b` / `PgUp` | Page up |
+| `↑` | Scroll up one line |
+| `↓` | Scroll down one line |
+| `Space` | Page down |
+| `b` | Page up |
 | `g` | Jump to chapter start |
 | `G` | Jump to chapter end |
-| `←` / `h` / `p` | Previous chapter |
-| `→` / `l` / `n` | Next chapter |
+| `←` | Previous chapter |
+| `→` | Next chapter |
 | `c` | Open chapter picker |
-| `Esc` / `q` | Return to bookshelf (auto-save position) |
+| `Esc` | Return to bookshelf (auto-save position) |
 | `?` | Show help |
 
 ### Chapter Picker
 
 | Key | Action |
 |-----|--------|
-| `↑` / `k` | Move up |
-| `↓` / `j` | Move down |
+| `↑` | Move up |
+| `↓` | Move down |
 | `Enter` | Jump to selected chapter |
 | `/` | Start filtering |
 | `Esc` | Close picker |

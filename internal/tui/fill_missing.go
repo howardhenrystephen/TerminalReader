@@ -33,6 +33,7 @@ type FillMissingModel struct {
 	currentCh   int
 	totalCh     int
 	chTitle     string
+	logs        []crawler.LogMessage
 	db          *db.DB
 	engine      *crawler.Engine
 	result      *crawler.FillMissingResult
@@ -63,7 +64,7 @@ func NewFillMissingModel(database *db.DB, engine *crawler.Engine) *FillMissingMo
 	}
 }
 
-// Start 设置补充缺章任务
+// Start 设置补充缺章任务（书架整书补充）
 func (m *FillMissingModel) Start(book *db.Book) {
 	logger.Debugf("[TUI/FillMissing] 设置补充任务: %s", book.Title)
 	m.book = book
@@ -72,11 +73,57 @@ func (m *FillMissingModel) Start(book *db.Book) {
 	m.currentCh = 0
 	m.totalCh = 0
 	m.chTitle = ""
+	m.logs = nil
 	m.result = nil
 	m.err = nil
 	m.progressCh = nil
 	m.done = false
 	m.stopwatch = stopwatch.NewWithInterval(time.Second)
+}
+
+// StartSingle 设置单章补充任务（阅读器触发）
+func (m *FillMissingModel) StartSingle(bookID int64, chapterNum int) {
+	logger.Debugf("[TUI/FillMissing] 设置单章补充任务: bookID=%d, chapter=%d", bookID, chapterNum)
+	m.book = &db.Book{ID: bookID}
+	m.state = FillMissingProgressing
+	m.progress = 0
+	m.currentCh = 0
+	m.totalCh = 0
+	m.chTitle = ""
+	m.logs = nil
+	m.result = nil
+	m.err = nil
+	m.progressCh = nil
+	m.done = false
+	m.stopwatch = stopwatch.NewWithInterval(time.Second)
+}
+
+// fillSingleMissingCmd 启动单章补充（异步，带进度）
+func (m *FillMissingModel) fillSingleMissingCmd(bookID int64, chapterNum int) tea.Cmd {
+	logger.Infof("[TUI/FillMissing] 启动单章补充: bookID=%d, chapter=%d", bookID, chapterNum)
+	m.progressCh = make(chan crawler.FillMissingProgress, 100)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	m.cancelFunc = cancel
+
+	go func() {
+		defer close(m.progressCh)
+		result, err := m.engine.FillSingleMissingChapter(ctx, bookID, chapterNum, m.db, m.progressCh)
+		if err != nil {
+			logger.Errorf("[TUI/FillMissing] 单章补充失败: %v", err)
+			select {
+			case m.progressCh <- crawler.FillMissingProgress{Done: true, Error: err}:
+			case <-ctx.Done():
+			}
+		} else {
+			select {
+			case m.progressCh <- crawler.FillMissingProgress{Done: true, Result: result}:
+			case <-ctx.Done():
+			}
+		}
+	}()
+
+	return tea.Batch(m.stopwatch.Start(), m.listenProgressCmd())
 }
 
 // fillMissingCmd 启动补充缺章
@@ -133,10 +180,11 @@ func (m *FillMissingModel) listenProgressCmd() tea.Cmd {
 				return fillMissingDoneMsg{Progress: p}
 			}
 			return fillMissingProgressMsg{
-				Progress:  p.Percentage,
-				CurrentCh: p.CurrentChapter,
-				TotalCh:   p.TotalChapters,
-				ChTitle:   p.ChapterTitle,
+				Progress:    p.Percentage,
+				CurrentCh:   p.CurrentChapter,
+				TotalCh:     p.TotalChapters,
+				ChTitle:     p.ChapterTitle,
+				LogMessages: p.LogMessages,
 			}
 		case <-time.After(200 * time.Millisecond):
 			return fillMissingTickMsg{}
@@ -164,6 +212,9 @@ func (m FillMissingModel) Update(msg tea.Msg) (FillMissingModel, tea.Cmd) {
 		m.totalCh = msg.TotalCh
 		m.chTitle = msg.ChTitle
 		m.state = FillMissingProgressing
+		if len(msg.LogMessages) > 0 {
+			m.logs = msg.LogMessages
+		}
 		cmds = append(cmds, m.progressBar.SetPercent(msg.Progress/100))
 		cmds = append(cmds, m.listenProgressCmd())
 	case fillMissingTickMsg:
@@ -173,6 +224,9 @@ func (m FillMissingModel) Update(msg tea.Msg) (FillMissingModel, tea.Cmd) {
 	case fillMissingDoneMsg:
 		m.state = FillMissingFinished
 		m.done = true
+		if len(msg.Progress.LogMessages) > 0 {
+			m.logs = msg.Progress.LogMessages
+		}
 		if msg.Progress.Error != nil {
 			m.err = msg.Progress.Error
 			m.progress = msg.Progress.Percentage
@@ -200,6 +254,15 @@ func (m FillMissingModel) Update(msg tea.Msg) (FillMissingModel, tea.Cmd) {
 		if m.state == FillMissingFinished {
 			m.state = FillMissingIdle
 		}
+		m.book = nil
+		m.result = nil
+		m.err = nil
+		m.progress = 0
+		m.currentCh = 0
+		m.totalCh = 0
+		m.chTitle = ""
+		m.logs = nil
+		m.done = false
 	}
 
 	var swCmd tea.Cmd
@@ -252,12 +315,15 @@ func (m FillMissingModel) View() string {
 	case FillMissingProgressing:
 		bar := m.progressBar.ViewAs(m.progress / 100)
 		info := fmt.Sprintf("%d/%d %s", m.currentCh, m.totalCh, m.chTitle)
+		logView := m.renderLogs()
 		content := lipgloss.JoinVertical(
 			lipgloss.Left,
-			TitleStyle.Render("Filling Missing Chapters"),
+			TitleStyle.Render("Filling Missing Chapter"),
 			"",
 			bar,
 			fmt.Sprintf("%.1f%% %s", m.progress, info),
+			"",
+			logView,
 			"",
 			renderFooter([]footerItem{
 				{key: "esc", desc: "cancel"},
@@ -265,7 +331,7 @@ func (m FillMissingModel) View() string {
 		)
 		return lipgloss.NewStyle().
 			Width(m.width).Height(m.height).
-			Render(lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Top, DialogBoxStyle.Width(50).Render(content)))
+			Render(lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Top, DialogBoxStyle.Width(60).Render(content)))
 
 	case FillMissingFinished:
 		status := "Done"
@@ -282,22 +348,82 @@ func (m FillMissingModel) View() string {
 				style = ToastErrorStyle
 			}
 		}
+		logView := m.renderLogs()
 		content := lipgloss.JoinVertical(
 			lipgloss.Left,
 			TitleStyle.Render("Fill Result"),
 			"",
 			style.Render(status),
 			"",
+			logView,
+			"",
 			renderFooter([]footerItem{
-				{key: "enter/esc", desc: "close"},
+				{key: "enter", desc: "close"},
+				{key: "esc", desc: "close"},
 			}, 48),
 		)
 		return lipgloss.NewStyle().
 			Width(m.width).Height(m.height).
-			Render(lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Top, DialogBoxStyle.Width(50).Render(content)))
+			Render(lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Top, DialogBoxStyle.Width(60).Render(content)))
 	}
 
 	return ""
+}
+
+// renderLogs 渲染固定高度日志区域（旧日志被新日志顶上去，UI不变形）
+func (m FillMissingModel) renderLogs() string {
+	const maxLines = 6
+	const lineHeight = 1
+
+	var lines []string
+	start := 0
+	if len(m.logs) > maxLines {
+		start = len(m.logs) - maxLines
+	}
+
+	for i := start; i < len(m.logs); i++ {
+		log := m.logs[i]
+		var prefix string
+		var color string
+		switch log.Level {
+		case crawler.LogSuccess:
+			prefix = "✓"
+			color = ColorSuccess
+		case crawler.LogError:
+			prefix = "✗"
+			color = ColorError
+		case crawler.LogWarning:
+			prefix = "!"
+			color = ColorHighlight
+		default:
+			prefix = "•"
+			color = ColorSubtext
+		}
+
+		msg := log.Message
+		if log.URL != "" {
+			msg = msg + " " + log.URL
+		}
+		// 截断过长内容，保证每行固定宽度
+		maxWidth := 56
+		runes := []rune(msg)
+		if len(runes) > maxWidth {
+			msg = string(runes[:maxWidth-3]) + "..."
+		}
+
+		line := lipgloss.NewStyle().
+			Foreground(lipgloss.Color(color)).
+			Height(lineHeight).
+			Render(fmt.Sprintf("%s %s", prefix, msg))
+		lines = append(lines, line)
+	}
+
+	// 补空行保持固定高度
+	for len(lines) < maxLines {
+		lines = append(lines, lipgloss.NewStyle().Height(lineHeight).Render(""))
+	}
+
+	return lipgloss.JoinVertical(lipgloss.Left, lines...)
 }
 
 // MiniView 返回迷你进度条
@@ -328,7 +454,7 @@ func (m FillMissingModel) MiniView() string {
 		lipgloss.Top,
 		bar,
 		" ",
-		lipgloss.NewStyle().Foreground(lipgloss.Color(ColorSubtext)).Render(fmt.Sprintf("%s · %s · %d/%d · x:stop", status, elapsed, m.currentCh, m.totalCh)),
+		lipgloss.NewStyle().Foreground(lipgloss.Color(ColorSubtext)).Render(fmt.Sprintf("%s · %s · %d/%d", status, elapsed, m.currentCh, m.totalCh)),
 	)
 
 	return indent + line
@@ -352,10 +478,11 @@ func (m *FillMissingModel) Wait() {
 
 // 消息类型
 type fillMissingProgressMsg struct {
-	Progress  float64
-	CurrentCh int
-	TotalCh   int
-	ChTitle   string
+	Progress    float64
+	CurrentCh   int
+	TotalCh     int
+	ChTitle     string
+	LogMessages []crawler.LogMessage
 }
 
 type fillMissingDoneMsg struct {
@@ -368,4 +495,10 @@ type fillMissingHideMsg struct{}
 // StartFillMissingMsg 开始补充缺章消息
 type StartFillMissingMsg struct {
 	Book *db.Book
+}
+
+// StartFillSingleMissingMsg 开始补充单章消息
+type StartFillSingleMissingMsg struct {
+	BookID     int64
+	ChapterNum int
 }

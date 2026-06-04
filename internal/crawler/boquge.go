@@ -203,7 +203,7 @@ func (b *BoqugeSource) FetchChapterContent(ctx context.Context, chapterURL strin
 	if title != "" && content != "" {
 		fullContent := title + "\n\n" + content
 		// 检测标题是否符合 "第X章" 格式，不符合说明是错误页面
-		if !isValidChapterTitle(title) {
+		if !chapterTitleRe.MatchString(strings.TrimSpace(title)) {
 			logger.Warnf("[Crawler/boquge] 章节标题格式异常，可能是错误页面: title=%s url=%s", title, chapterURL)
 			return "", fmt.Errorf("invalid chapter title: %s", title)
 		}

@@ -171,17 +171,17 @@ func (m BookshelfModel) ViewWithMini(miniView string) string {
 
 	// 构建 footer
 	footerItems := []footerItem{
-		{key: "↑/k", desc: "up"},
-		{key: "↓/j", desc: "down"},
-		{key: "enter/l/o", desc: "open"},
-		{key: "s//", desc: "search"},
-		{key: "c/t", desc: "continue"},
-		{key: "f", desc: "fill missing"},
-		{key: "d/x", desc: "delete"},
-		{key: "tab/i", desc: "desc"},
+		{key: "↑", desc: "up"},
+		{key: "↓", desc: "down"},
+		{key: "enter", desc: "open"},
+		{key: "s", desc: "search"},
+		{key: "c", desc: "continue"},
+		{key: "f", desc: "fill"},
+		{key: "d", desc: "delete"},
+		{key: "tab", desc: "desc"},
 		{key: "p", desc: "pin"},
 		{key: "?", desc: "help"},
-		{key: "m/r", desc: "refresh"},
+		{key: "r", desc: "refresh"},
 		{key: "q", desc: "quit"},
 	}
 	// 如果有后台下载，在 footer 中显示停止键提示
@@ -292,9 +292,9 @@ func (m BookshelfModel) ViewDescFull(width, height int) string {
 			Render(descView),
 		"",
 		renderFooter([]footerItem{
-			{key: "↑/k", desc: "scroll up"},
-			{key: "↓/j", desc: "scroll down"},
-			{key: "tab/esc", desc: "back"},
+			{key: "↑", desc: "scroll up"},
+			{key: "↓", desc: "scroll down"},
+			{key: "tab", desc: "back"},
 		}, width),
 	)
 
@@ -387,12 +387,14 @@ type footerItem struct {
 }
 
 // renderFooter 渲染底部 help 栏
+// 格式: key: function · key: function
 func renderFooter(items []footerItem, width int) string {
 	var parts []string
 	for _, item := range items {
 		part := HelpKeyStyle.Render(item.key) + HelpSepStyle.Render(":") + HelpDescStyle.Render(item.desc)
 		parts = append(parts, part)
 	}
-	line := strings.Join(parts, "  ")
+	sep := HelpSepStyle.Render(" · ")
+	line := strings.Join(parts, sep)
 	return FooterStyle.Width(width).Render(line)
 }

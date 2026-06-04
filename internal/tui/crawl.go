@@ -281,7 +281,8 @@ func (m CrawlModel) View() string {
 			style.Render(status),
 			"",
 			renderFooter([]footerItem{
-				{key: "enter/esc", desc: "close"},
+				{key: "enter", desc: "close"},
+				{key: "esc", desc: "close"},
 			}, 48),
 		)
 		return lipgloss.NewStyle().
@@ -321,7 +322,7 @@ func (m CrawlModel) MiniView() string {
 		lipgloss.Top,
 		bar,
 		" ",
-		lipgloss.NewStyle().Foreground(lipgloss.Color(ColorSubtext)).Render(fmt.Sprintf("%s · %s · %d/%d · x:stop", status, elapsed, m.currentCh, m.totalCh)),
+		lipgloss.NewStyle().Foreground(lipgloss.Color(ColorSubtext)).Render(fmt.Sprintf("%s · %s · %d/%d", status, elapsed, m.currentCh, m.totalCh)),
 	)
 
 	return indent + line

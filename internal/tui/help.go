@@ -138,13 +138,13 @@ func (m *HelpModel) renderContent() {
 	b.WriteString("    书架中按 tab 打开，展示书籍的完整简介和元信息。\n\n")
 
 	b.WriteString(highlight("  书架快捷键") + "\n\n")
-	b.WriteString(success("    ↑/k") + "      上移\n")
-	b.WriteString(success("    ↓/j") + "      下移\n")
-	b.WriteString(success("    enter/l") + "  打开书籍\n")
+	b.WriteString(success("    ↑") + "        上移\n")
+	b.WriteString(success("    ↓") + "        下移\n")
+	b.WriteString(success("    enter") + "    打开书籍\n")
 	b.WriteString(success("    s") + "        搜索新书\n")
 	b.WriteString(success("    c") + "        继续下载（从上次进度增量下载）\n")
 	b.WriteString(success("    d") + "        删除书籍\n")
-	b.WriteString(success("    m") + "        刷新书架\n")
+	b.WriteString(success("    r") + "        刷新书架\n")
 	b.WriteString(success("    tab") + "      查看书籍简介\n")
 	b.WriteString(success("    p") + "        置顶 / 取消置顶\n")
 	b.WriteString(success("    g") + "        跳到顶部\n")
@@ -154,21 +154,21 @@ func (m *HelpModel) renderContent() {
 	b.WriteString(success("    q") + "        退出程序\n\n")
 
 	b.WriteString(highlight("  阅读器快捷键") + "\n\n")
-	b.WriteString(success("    ↑/k") + "      向上滚动一行\n")
-	b.WriteString(success("    ↓/j") + "      向下滚动一行\n")
-	b.WriteString(success("    space/f") + "  向下翻页\n")
-	b.WriteString(success("    b/pgup") + "   向上翻页\n")
+	b.WriteString(success("    ↑") + "        向上滚动一行\n")
+	b.WriteString(success("    ↓") + "        向下滚动一行\n")
+	b.WriteString(success("    space") + "    向下翻页\n")
+	b.WriteString(success("    b") + "        向上翻页\n")
 	b.WriteString(success("    g") + "        跳到章节开头\n")
 	b.WriteString(success("    G") + "        跳到章节结尾\n")
-	b.WriteString(success("    ←/h/p") + "    上一章\n")
-	b.WriteString(success("    →/l/n") + "    下一章\n")
+	b.WriteString(success("    ←") + "        上一章\n")
+	b.WriteString(success("    →") + "        下一章\n")
 	b.WriteString(success("    c") + "        打开章节选择器\n")
-	b.WriteString(success("    esc/q") + "    返回书架（自动保存进度）\n")
+	b.WriteString(success("    esc") + "      返回书架（自动保存进度）\n")
 	b.WriteString(success("    ?") + "        显示帮助\n\n")
 
 	b.WriteString(highlight("  章节选择器快捷键") + "\n\n")
-	b.WriteString(success("    ↑/k") + "      上移\n")
-	b.WriteString(success("    ↓/j") + "      下移\n")
+	b.WriteString(success("    ↑") + "        上移\n")
+	b.WriteString(success("    ↓") + "        下移\n")
 	b.WriteString(success("    enter") + "    跳转到选中章节\n")
 	b.WriteString(success("    /") + "        开始过滤\n")
 	b.WriteString(success("    esc") + "      关闭选择器\n\n")
@@ -224,11 +224,13 @@ func (m HelpModel) View() string {
 
 	// Footer help bar
 	footer := renderFooter([]footerItem{
-		{key: "↑/k", desc: "scroll up"},
-		{key: "↓/j", desc: "scroll down"},
-		{key: "pgup/pgdown", desc: "page"},
-		{key: "g/G", desc: "top/bottom"},
-		{key: "?/esc", desc: "back"},
+		{key: "↑", desc: "scroll up"},
+		{key: "↓", desc: "scroll down"},
+		{key: "pgup", desc: "page up"},
+		{key: "pgdown", desc: "page down"},
+		{key: "g", desc: "top"},
+		{key: "G", desc: "bottom"},
+		{key: "?", desc: "back"},
 	}, m.width)
 
 	// 将 footer 放在内容下方，紧贴内容无空行

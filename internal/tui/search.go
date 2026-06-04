@@ -202,15 +202,15 @@ func (m SearchModel) View() string {
 	var footerItems []footerItem
 	if m.step == stepSelectSource {
 		footerItems = []footerItem{
-			{key: "↑/k", desc: "up"},
-			{key: "↓/j", desc: "down"},
+			{key: "↑", desc: "up"},
+			{key: "↓", desc: "down"},
 			{key: "enter", desc: "select source"},
 			{key: "esc", desc: "close"},
 		}
 	} else {
 		footerItems = []footerItem{
-			{key: "↑/k", desc: "up"},
-			{key: "↓/j", desc: "down"},
+			{key: "↑", desc: "up"},
+			{key: "↓", desc: "down"},
 			{key: "enter", desc: "confirm"},
 			{key: "b", desc: "background"},
 			{key: "esc", desc: "back"},

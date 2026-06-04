@@ -357,16 +357,32 @@ func consecutiveMatchBonus(a, b string) int {
 	return 0
 }
 
-// chapterTitleRe 匹配 "第X章 标题" 或 "第X章标题" 格式
-var chapterTitleRe = regexp.MustCompile(`^[第][零一二三四五六七八九十百千万亿\d]+[章]\s*(.*)$`)
+// chapterTitleRe 匹配章节标题格式，支持：
+// - "第X章 标题" / "第X章标题"
+// - "第X集 标题" / "第X集标题"
+// - "第X集 第X章 标题" 等复合格式
+var chapterTitleRe = regexp.MustCompile(`^[第][零一二三四五六七八九十百千万亿\d]+[集章]\s*(.*)$`)
 
-// isValidChapterTitle 检查标题是否符合 "第X章..." 格式
-func isValidChapterTitle(title string) bool {
-	return chapterTitleRe.MatchString(strings.TrimSpace(title))
+// isValidChapterTitle 检查内容第一行是否包含 "第X章..." 或 "第X集..." 格式
+// 验证的是原始内容中的标题行，而不是 extractChapterTitle 提取后的纯标题
+func isValidChapterTitle(content string) bool {
+	lines := strings.Split(content, "\n")
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+		return chapterTitleRe.MatchString(line)
+	}
+	return false
 }
 
-// extractChapterTitle 从 content 第一行提取真实章节标题（去掉 "第X章" 前缀）。
-// 如果第一行不符合 "第X章" 格式，则返回第一行非空内容。
+// chapterExtractRe 用于提取章节标题，去掉所有 "第X集" 和 "第X章" 前缀，只保留纯标题
+// 例如："第十一集 大力神 第七十一章 冰清玉洁唐三少（上）" → "冰清玉洁唐三少（上）"
+var chapterExtractRe = regexp.MustCompile(`^(?:[第][零一二三四五六七八九十百千万亿\d]+[集]\s*)*(?:[第][零一二三四五六七八九十百千万亿\d]+[章]\s*)+(.*)$`)
+
+// extractChapterTitle 从 content 第一行提取纯章节标题（去掉所有 "第X集"/"第X章" 前缀）。
+// 例如："第十一集 大力神 第七十一章 冰清玉洁唐三少（上）" → "冰清玉洁唐三少（上）"
 func extractChapterTitle(content string) string {
 	lines := strings.Split(content, "\n")
 	for _, line := range lines {
@@ -374,6 +390,11 @@ func extractChapterTitle(content string) string {
 		if line == "" {
 			continue
 		}
+		// 去掉所有 "第X集" 和 "第X章" 前缀，只保留纯标题
+		if m := chapterExtractRe.FindStringSubmatch(line); m != nil {
+			return strings.TrimSpace(m[1])
+		}
+		// 回退：匹配 "第X集" 或 "第X章" 简单格式
 		if m := chapterTitleRe.FindStringSubmatch(line); m != nil {
 			return strings.TrimSpace(m[1])
 		}

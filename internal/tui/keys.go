@@ -11,7 +11,7 @@ type GlobalKeyMap struct {
 // GlobalKeys 全局快捷键实例
 var GlobalKeys = GlobalKeyMap{
 	Quit: key.NewBinding(
-		key.WithKeys("q", "ctrl+c"),
+		key.WithKeys("q"),
 		key.WithHelp("q", "quit"),
 	),
 	Help: key.NewBinding(
@@ -42,52 +42,52 @@ type BookshelfKeyMap struct {
 // BookshelfKeys 书架快捷键实例
 var BookshelfKeys = BookshelfKeyMap{
 	Up: key.NewBinding(
-		key.WithKeys("up", "k"),
-		key.WithHelp("↑/k", "up"),
+		key.WithKeys("up"),
+		key.WithHelp("↑", "up"),
 	),
 	Down: key.NewBinding(
-		key.WithKeys("down", "j"),
-		key.WithHelp("↓/j", "down"),
+		key.WithKeys("down"),
+		key.WithHelp("↓", "down"),
 	),
 	Enter: key.NewBinding(
-		key.WithKeys("enter", "l", "o"),
-		key.WithHelp("enter/l/o", "open"),
+		key.WithKeys("enter"),
+		key.WithHelp("enter", "open"),
 	),
 	Search: key.NewBinding(
-		key.WithKeys("s", "/"),
-		key.WithHelp("s//", "search"),
+		key.WithKeys("s"),
+		key.WithHelp("s", "search"),
 	),
 	Delete: key.NewBinding(
-		key.WithKeys("d", "delete", "x"),
-		key.WithHelp("d/del/x", "delete"),
+		key.WithKeys("d"),
+		key.WithHelp("d", "delete"),
 	),
 	Refresh: key.NewBinding(
-		key.WithKeys("m", "r"),
-		key.WithHelp("m/r", "refresh"),
+		key.WithKeys("r"),
+		key.WithHelp("r", "refresh"),
 	),
 	GoTop: key.NewBinding(
-		key.WithKeys("g", "home"),
-		key.WithHelp("g/home", "top"),
+		key.WithKeys("g"),
+		key.WithHelp("g", "top"),
 	),
 	GoBottom: key.NewBinding(
-		key.WithKeys("G", "end"),
-		key.WithHelp("G/end", "bottom"),
+		key.WithKeys("G"),
+		key.WithHelp("G", "bottom"),
 	),
 	Desc: key.NewBinding(
-		key.WithKeys("tab", "i"),
-		key.WithHelp("tab/i", "description"),
+		key.WithKeys("tab"),
+		key.WithHelp("tab", "description"),
 	),
 	Pin: key.NewBinding(
-		key.WithKeys("p", "P"),
-		key.WithHelp("p/P", "pin"),
+		key.WithKeys("p"),
+		key.WithHelp("p", "pin"),
 	),
 	Redraw: key.NewBinding(
-		key.WithKeys("r"),
-		key.WithHelp("r", "redraw"),
+		key.WithKeys("R"),
+		key.WithHelp("R", "redraw"),
 	),
 	Continue: key.NewBinding(
-		key.WithKeys("c", "t"),
-		key.WithHelp("c/t", "continue download"),
+		key.WithKeys("c"),
+		key.WithHelp("c", "continue download"),
 	),
 	StopCrawl: key.NewBinding(
 		key.WithKeys("x"),
@@ -98,7 +98,7 @@ var BookshelfKeys = BookshelfKeyMap{
 		key.WithHelp("T", "clear all data"),
 	),
 	FillMissing: key.NewBinding(
-		key.WithKeys("f", "F"),
+		key.WithKeys("f"),
 		key.WithHelp("f", "fill missing"),
 	),
 }
@@ -116,53 +116,58 @@ type ReaderKeyMap struct {
 	ChapterPicker key.Binding
 	Back          key.Binding
 	Bookmark      key.Binding
+	FillMissing   key.Binding
 }
 
 // ReaderKeys 阅读器快捷键实例
 var ReaderKeys = ReaderKeyMap{
 	ScrollUp: key.NewBinding(
-		key.WithKeys("up", "k", "w"),
-		key.WithHelp("↑/k/w", "scroll up"),
+		key.WithKeys("up"),
+		key.WithHelp("↑", "scroll up"),
 	),
 	ScrollDown: key.NewBinding(
-		key.WithKeys("down", "j", "s"),
-		key.WithHelp("↓/j/s", "scroll down"),
+		key.WithKeys("down"),
+		key.WithHelp("↓", "scroll down"),
 	),
 	PageUp: key.NewBinding(
-		key.WithKeys("b", "pgup", "B"),
-		key.WithHelp("b/B/pgup", "page up"),
+		key.WithKeys("b"),
+		key.WithHelp("b", "page up"),
 	),
 	PageDown: key.NewBinding(
-		key.WithKeys(" ", "f", "pgdown", "F"),
-		key.WithHelp("space/f/F/pgdn", "page down"),
+		key.WithKeys(" "),
+		key.WithHelp("space", "page down"),
 	),
 	PrevChapter: key.NewBinding(
-		key.WithKeys("left", "h", "p", "H"),
-		key.WithHelp("←/h/H/p", "prev chapter"),
+		key.WithKeys("left"),
+		key.WithHelp("←", "prev chapter"),
 	),
 	NextChapter: key.NewBinding(
-		key.WithKeys("right", "l", "n", "L"),
-		key.WithHelp("→/l/L/n", "next chapter"),
+		key.WithKeys("right"),
+		key.WithHelp("→", "next chapter"),
 	),
 	GoStart: key.NewBinding(
-		key.WithKeys("g", "home"),
-		key.WithHelp("g/home", "chapter start"),
+		key.WithKeys("g"),
+		key.WithHelp("g", "chapter start"),
 	),
 	GoEnd: key.NewBinding(
-		key.WithKeys("G", "end"),
-		key.WithHelp("G/end", "chapter end"),
+		key.WithKeys("G"),
+		key.WithHelp("G", "chapter end"),
 	),
 	ChapterPicker: key.NewBinding(
-		key.WithKeys("c", "C", "tab"),
-		key.WithHelp("c/C/tab", "chapters"),
+		key.WithKeys("c"),
+		key.WithHelp("c", "chapters"),
 	),
 	Back: key.NewBinding(
-		key.WithKeys("esc", "q", "Q"),
-		key.WithHelp("esc/q/Q", "back"),
+		key.WithKeys("esc"),
+		key.WithHelp("esc", "back"),
 	),
 	Bookmark: key.NewBinding(
-		key.WithKeys("m", "M", "b"),
-		key.WithHelp("m/M/b", "bookmark"),
+		key.WithKeys("m"),
+		key.WithHelp("m", "bookmark"),
+	),
+	FillMissing: key.NewBinding(
+		key.WithKeys("f"),
+		key.WithHelp("f", "fill missing"),
 	),
 }
 
@@ -180,32 +185,32 @@ type ChapterPickerKeyMap struct {
 // ChapterPickerKeys 章节选择快捷键实例
 var ChapterPickerKeys = ChapterPickerKeyMap{
 	Close: key.NewBinding(
-		key.WithKeys("esc", "ctrl+c", "q", "Q"),
-		key.WithHelp("esc/q", "close"),
+		key.WithKeys("esc"),
+		key.WithHelp("esc", "close"),
 	),
 	Confirm: key.NewBinding(
-		key.WithKeys("enter", "l", "L"),
-		key.WithHelp("enter/l", "jump"),
+		key.WithKeys("enter"),
+		key.WithHelp("enter", "jump"),
 	),
 	Up: key.NewBinding(
-		key.WithKeys("up", "k", "w", "W"),
-		key.WithHelp("↑/k/w", "up"),
+		key.WithKeys("up"),
+		key.WithHelp("↑", "up"),
 	),
 	Down: key.NewBinding(
-		key.WithKeys("down", "j", "s", "S"),
-		key.WithHelp("↓/j/s", "down"),
+		key.WithKeys("down"),
+		key.WithHelp("↓", "down"),
 	),
 	PageUp: key.NewBinding(
-		key.WithKeys("left", "h", "pgup"),
-		key.WithHelp("←/h/pgup", "page up"),
+		key.WithKeys("left"),
+		key.WithHelp("←", "page up"),
 	),
 	PageDown: key.NewBinding(
-		key.WithKeys("right", "l", "pgdown"),
-		key.WithHelp("→/l/pgdn", "page down"),
+		key.WithKeys("right"),
+		key.WithHelp("→", "page down"),
 	),
 	Filter: key.NewBinding(
-		key.WithKeys("/", "f", "F"),
-		key.WithHelp("//f", "filter"),
+		key.WithKeys("/"),
+		key.WithHelp("/", "filter"),
 	),
 }
 
@@ -222,27 +227,27 @@ type SearchKeyMap struct {
 // SearchKeys 搜索弹层快捷键实例
 var SearchKeys = SearchKeyMap{
 	Close: key.NewBinding(
-		key.WithKeys("esc", "ctrl+c", "q", "Q"),
-		key.WithHelp("esc/q", "close"),
+		key.WithKeys("esc"),
+		key.WithHelp("esc", "close"),
 	),
 	Confirm: key.NewBinding(
-		key.WithKeys("enter", "l", "L"),
-		key.WithHelp("enter/l", "confirm"),
+		key.WithKeys("enter"),
+		key.WithHelp("enter", "confirm"),
 	),
 	Up: key.NewBinding(
-		key.WithKeys("up", "k", "w", "W"),
-		key.WithHelp("↑/k/w", "up"),
+		key.WithKeys("up"),
+		key.WithHelp("↑", "up"),
 	),
 	Down: key.NewBinding(
-		key.WithKeys("down", "j", "s", "S"),
-		key.WithHelp("↓/j/s", "down"),
+		key.WithKeys("down"),
+		key.WithHelp("↓", "down"),
 	),
 	Tab: key.NewBinding(
-		key.WithKeys("tab", "t", "T"),
-		key.WithHelp("tab/t", "switch"),
+		key.WithKeys("tab"),
+		key.WithHelp("tab", "switch"),
 	),
 	Background: key.NewBinding(
-		key.WithKeys("b", "B", "bg"),
+		key.WithKeys("b"),
 		key.WithHelp("b", "background download"),
 	),
 }
