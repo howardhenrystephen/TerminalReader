@@ -33,24 +33,46 @@ func NewIxdzs8Source() *Ixdzs8Source {
 }
 
 func (i *Ixdzs8Source) Name() string {
-	return "爱下电子书"
+	return "源B"
 }
 
-// findSpiderPath 查找 spider.py 路径
+// findSpiderPath 查找 spider 路径
+// 优先查找打包后的二进制（spider/spider.exe），找不到再回退到 spider.py
 func findSpiderPath() string {
-	candidates := []string{
-		filepath.Join("script", "spider.py"),
-		filepath.Join("..", "..", "script", "spider.py"),
-		filepath.Join("..", "script", "spider.py"),
+	// 1. 优先查找打包后的二进制（不需要 Python 环境）
+	binaryCandidates := []string{
+		"spider",
+		filepath.Join("script", "spider"),
+		filepath.Join("..", "script", "spider"),
+		filepath.Join("..", "..", "script", "spider"),
 	}
-	for _, p := range candidates {
+	if runtime.GOOS == "windows" {
+		for i := range binaryCandidates {
+			binaryCandidates[i] += ".exe"
+		}
+	}
+	for _, p := range binaryCandidates {
 		if abs, err := filepath.Abs(p); err == nil {
 			if _, err := os.Stat(abs); err == nil {
 				return abs
 			}
 		}
 	}
-	abs, _ := filepath.Abs(candidates[0])
+
+	// 2. 回退到 Python 脚本
+	pyCandidates := []string{
+		filepath.Join("script", "spider.py"),
+		filepath.Join("..", "script", "spider.py"),
+		filepath.Join("..", "..", "script", "spider.py"),
+	}
+	for _, p := range pyCandidates {
+		if abs, err := filepath.Abs(p); err == nil {
+			if _, err := os.Stat(abs); err == nil {
+				return abs
+			}
+		}
+	}
+	abs, _ := filepath.Abs(pyCandidates[0])
 	return abs
 }
 
@@ -62,12 +84,23 @@ func pythonCmd() string {
 	return "python3"
 }
 
-// spiderRequest 向 Python 爬虫发送请求
+// isBinarySpider 判断 spider 路径是否是打包后的二进制
+func isBinarySpider(path string) bool {
+	return !strings.HasSuffix(path, ".py")
+}
+
+// spiderRequest 向爬虫发送请求（支持打包后的二进制和 Python 脚本）
 func (i *Ixdzs8Source) spiderRequest(ctx context.Context, req map[string]interface{}) (map[string]interface{}, error) {
 	logger.Debugf("[Crawler/ixdzs8] spiderRequest: cmd=%v _reqId=%v", req["cmd"], req["_reqId"])
 
-	cmd := exec.CommandContext(ctx, pythonCmd(), i.spiderPath)
-	logger.Debugf("[Crawler/ixdzs8] spiderRequest: exec=%s %s", pythonCmd(), i.spiderPath)
+	var cmd *exec.Cmd
+	if isBinarySpider(i.spiderPath) {
+		cmd = exec.CommandContext(ctx, i.spiderPath)
+		logger.Debugf("[Crawler/ixdzs8] spiderRequest: exec binary=%s", i.spiderPath)
+	} else {
+		cmd = exec.CommandContext(ctx, pythonCmd(), i.spiderPath)
+		logger.Debugf("[Crawler/ixdzs8] spiderRequest: exec=%s %s", pythonCmd(), i.spiderPath)
+	}
 
 	setProcessGroup(cmd)
 

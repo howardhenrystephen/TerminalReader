@@ -53,7 +53,7 @@ func checkPrerequisites() error {
 	// 检查 cloudscraper
 	cmd := exec.Command(pythonCmd, "-c", "import cloudscraper")
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("未找到 cloudscraper，请运行: %s -m pip install cloudscraper", pythonCmd)
+		return fmt.Errorf("未找到 cloudscraper (Python: %s)，请运行: %s -m pip install cloudscraper beautifulsoup4", pythonCmd, pythonCmd)
 	}
 
 	// 检查 spider.py
@@ -123,9 +123,10 @@ func main() {
 	}()
 
 	engine := crawler.NewEngine(database)
-	// 注册来源
-	engine.RegisterSource(crawler.NewIxdzs8Source())
-	engine.RegisterSource(crawler.NewBoqugeSource())
+	// 注册来源（按 A、B、C 顺序）
+	engine.RegisterSource(crawler.NewYqxscSource())  // 源A
+	engine.RegisterSource(crawler.NewIxdzs8Source()) // 源B
+	engine.RegisterSource(crawler.NewBoqugeSource()) // 源C
 	logger.Infof("爬虫引擎初始化完成，注册来源: %v", engine.GetSourceNames())
 
 	app := tui.NewApp(database, engine)
