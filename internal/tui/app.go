@@ -562,6 +562,8 @@ func (m AppModel) handleBookshelfKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	}
 	if keyMatches(msg, BookshelfKeys.Refresh) {
 		logger.Debugf("[TUI] 刷新书架")
+		m.bookshelf.toast = ""
+		m.bookshelf.toastIsError = false
 		return m, m.bookshelf.LoadBooks()
 	}
 	if keyMatches(msg, BookshelfKeys.Desc) {

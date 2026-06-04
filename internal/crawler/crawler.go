@@ -147,7 +147,7 @@ func (e *Engine) SearchBySource(ctx context.Context, sourceName, keyword string)
 func (e *Engine) CrawlBook(ctx context.Context, sourceName, sourceURL string, progressCh chan<- CrawlProgress) (int64, error) {
 	logger.Infof("[Crawler] 开始爬取书籍: source=%s, url=%s", sourceName, sourceURL)
 	switch sourceName {
-	case "爱下电子书":
+	case "源B":
 		bookID, err := e.CrawlIxdzs8Book(ctx, sourceURL, e.db, progressCh)
 		if err != nil {
 			logger.Errorf("[Crawler] 爬取失败: %v", err)
@@ -155,7 +155,15 @@ func (e *Engine) CrawlBook(ctx context.Context, sourceName, sourceURL string, pr
 			logger.Infof("[Crawler] 爬取完成, bookID=%d", bookID)
 		}
 		return bookID, err
-	case "笔趣阁":
+	case "源A":
+		bookID, err := e.CrawlYqxscBook(ctx, sourceURL, e.db, progressCh)
+		if err != nil {
+			logger.Errorf("[Crawler] 爬取失败: %v", err)
+		} else {
+			logger.Infof("[Crawler] 爬取完成, bookID=%d", bookID)
+		}
+		return bookID, err
+	case "源C":
 		bookID, err := e.CrawlBoqugeBook(ctx, sourceURL, e.db, progressCh)
 		if err != nil {
 			logger.Errorf("[Crawler] 爬取失败: %v", err)

@@ -23,6 +23,30 @@ except ImportError:
 # 线程安全的 scraper 存储（每个线程一个）
 _thread_scrapers = {}
 
+# 全局请求时间记录（用于控制请求间隔）
+_last_request_time = 0
+_request_lock = None
+
+
+def _ensure_lock():
+    global _request_lock
+    if _request_lock is None:
+        import threading
+
+        _request_lock = threading.Lock()
+
+
+def _throttle_request(min_interval: float = 1.0):
+    """控制请求间隔，避免触发反爬"""
+    global _last_request_time
+    _ensure_lock()
+    with _request_lock:
+        now = time.time()
+        elapsed = now - _last_request_time
+        if elapsed < min_interval:
+            time.sleep(min_interval - elapsed)
+        _last_request_time = time.time()
+
 
 def get_scraper():
     """获取当前线程的 scraper 实例"""
@@ -36,8 +60,10 @@ def get_scraper():
     return _thread_scrapers[tid]
 
 
-def fetch_html(url: str, referer: str = None) -> str:
-    """获取页面 HTML，自动处理 JS 挑战"""
+def fetch_html(
+    url: str, referer: str = None, retry: int = 3, delay: float = 0.5
+) -> str:
+    """获取页面 HTML，自动处理 JS 挑战和反爬重试"""
     scraper = get_scraper()
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
@@ -47,22 +73,50 @@ def fetch_html(url: str, referer: str = None) -> str:
     if referer:
         headers["Referer"] = referer
 
-    resp = scraper.get(url, headers=headers, timeout=30)
-    resp.raise_for_status()
-    html = resp.text
+    # 1qxs 网站对频率敏感，增加请求节流
+    if "1qxs.com" in url:
+        _throttle_request(min_interval=1.5)
 
-    # 处理 JS 挑战
-    if "正在验证浏览器" in html or "challenge" in html.lower():
-        token_match = re.search(r'token\s*=\s*["\']([^"\']+)["\']', html)
-        if token_match:
-            token = token_match.group(1)
-            separator = "&" if "?" in url else "?"
-            challenge_url = f"{url}{separator}challenge={token}"
-            time.sleep(1.5)
-            resp = scraper.get(challenge_url, headers=headers, timeout=30)
+    last_error = None
+    for attempt in range(retry):
+        try:
+            if attempt > 0:
+                # 重试前增加延迟，指数退避
+                sleep_time = delay * (2 ** (attempt - 1))
+                time.sleep(sleep_time)
+                # 1qxs 重试时额外增加间隔
+                if "1qxs.com" in url:
+                    time.sleep(2.0)
+
+            resp = scraper.get(url, headers=headers, timeout=30)
+            resp.raise_for_status()
             html = resp.text
 
-    return html
+            # 处理 JS 挑战
+            if "正在验证浏览器" in html or "challenge" in html.lower():
+                token_match = re.search(r'token\s*=\s*["\']([^"\']+)["\']', html)
+                if token_match:
+                    token = token_match.group(1)
+                    separator = "&" if "?" in url else "?"
+                    challenge_url = f"{url}{separator}challenge={token}"
+                    time.sleep(1.5)
+                    resp = scraper.get(challenge_url, headers=headers, timeout=30)
+                    html = resp.text
+
+            # 检查是否是错误/跳转页面（1qxs 的反爬机制）
+            if "window.location.href" in html and "出错了" in html:
+                last_error = (
+                    f"Anti-crawl redirect page detected (attempt {attempt + 1})"
+                )
+                continue
+
+            return html
+
+        except Exception as e:
+            last_error = str(e)
+            continue
+
+    raise Exception(f"fetch_html failed after {retry} retries: {last_error}")
 
 
 def extract_book_id(url: str) -> str:
@@ -217,6 +271,175 @@ def extract_boquge_chapter(html: str) -> dict:
             if len(p.get_text(strip=True)) > 10
         ]
         content = "\n\n".join(texts)
+
+    return {"title": title, "content": content}
+
+
+def extract_yqxsc_info(html: str, url: str) -> dict:
+    """提取 1qxs.com 小说信息"""
+    from bs4 import BeautifulSoup
+
+    soup = BeautifulSoup(html, "html.parser")
+
+    # 提取标题: 从 <title> 取 "XXX - YYY - ZZZZZ" 的 XXX
+    title = "未知书名"
+    title_match = re.search(r"<title>(.*?)</title>", html, re.IGNORECASE)
+    if title_match:
+        title_text = title_match.group(1).strip()
+        parts = title_text.split(" - ")
+        if parts:
+            title = parts[0].strip()
+
+    # 提取作者: 从 <title> 取 "XXX - YYY - ZZZZZ" 的 YYY
+    author = "未知作者"
+    if title_match:
+        title_text = title_match.group(1).strip()
+        parts = title_text.split(" - ")
+        if len(parts) >= 2:
+            author = parts[1].strip()
+
+    # 提取简介: 从 meta name=description content="xxx:yyy" 取 ":" 之后的内容
+    intro = ""
+    desc_meta = soup.find("meta", attrs={"name": "description"})
+    if desc_meta:
+        desc_content = desc_meta.get("content", "")
+        # 取 ":" 之后的内容作为简介（":" 之前是网站宣传语）
+        if ":" in desc_content:
+            intro = desc_content.split(":", 1)[1].strip()
+        else:
+            intro = desc_content.strip()
+
+    # 提取总章节数: 从书籍主页的章节链接中提取最大章节号
+    # 书籍主页上有最新章节链接如 /xs_1/87331/725
+    total_chapters = 0
+    chapter_links = re.findall(r'href="/xs_\d+/\d+/(\d+)"', html)
+    if chapter_links:
+        total_chapters = max(int(x) for x in chapter_links)
+
+    # 如果上面没取到，尝试从 catalog 页面获取
+    if total_chapters == 0:
+        catalog_match = re.search(r"/xs_(\d+)/(\d+)", url)
+        if catalog_match:
+            site_num = catalog_match.group(1)
+            book_id = catalog_match.group(2)
+            catalog_url = f"https://m.1qxs.com/catalog_{site_num}/{book_id}"
+            try:
+                catalog_html = fetch_html(catalog_url)
+                catalog_soup = BeautifulSoup(catalog_html, "html.parser")
+                pagelist = catalog_soup.select_one("select.pagelist")
+                if pagelist:
+                    options = pagelist.find_all("option")
+                    if options:
+                        last_option = options[-1].get_text(strip=True)
+                        # 格式如 "1-100章"，提取 yyy
+                        match = re.search(r"-(\d+)", last_option)
+                        if match:
+                            total_chapters = int(match.group(1))
+            except Exception as e:
+                print(f"获取 catalog 失败: {e}", file=sys.stderr)
+
+    return {
+        "title": title,
+        "author": author,
+        "intro": intro,
+        "coverUrl": None,
+        "totalChapters": total_chapters,
+    }
+
+
+import base64
+
+
+def _extract_yqxsc_page_content(html: str) -> str:
+    """从单页 HTML 提取内容（包括可见内容和 p_key 隐藏的 base64 内容）"""
+    from bs4 import BeautifulSoup
+
+    texts = []
+
+    # 1. 提取可见内容
+    soup = BeautifulSoup(html, "html.parser")
+    content_el = soup.select_one("div.content")
+    if content_el:
+        paragraphs = content_el.find_all("p")
+        for i, p in enumerate(paragraphs):
+            # 跳过第一个和最后两个
+            if i == 0 or i >= len(paragraphs) - 2:
+                continue
+            text = p.get_text(strip=True)
+            # 跳过阅读模式提示和加载更多按钮
+            if text and "阅|读|模|式" not in text and "加|载|更|多" not in text:
+                texts.append(text)
+
+    # 2. 提取 p_key 隐藏的 base64 内容
+    p_key_match = re.search(r"p_key=['\"]([^'\"]+)['\"]", html)
+    if p_key_match:
+        try:
+            decoded = base64.b64decode(p_key_match.group(1)).decode("utf-8")
+            decoded_soup = BeautifulSoup(decoded, "html.parser")
+            for p in decoded_soup.find_all("p"):
+                text = p.get_text(strip=True)
+                if text:
+                    texts.append(text)
+        except Exception:
+            pass
+
+    return "\n\n".join(texts)
+
+
+def extract_yqxsc_chapter(html: str, url: str) -> dict:
+    """提取 1qxs.com 章节内容（自动获取所有分页，每页包含 p_key 隐藏内容）"""
+    from bs4 import BeautifulSoup
+
+    # 提取标题: 从 meta name=keywords content="xxx" 取 "," 前的字符
+    title = "未知章节"
+    keywords_match = re.search(
+        r'<meta[^>]*name=["\']keywords["\'][^>]*content=["\']([^"\']+)["\']',
+        html,
+        re.IGNORECASE,
+    )
+    if not keywords_match:
+        keywords_match = re.search(
+            r'<meta[^>]*content=["\']([^"\']+)["\'][^>]*name=["\']keywords["\']',
+            html,
+            re.IGNORECASE,
+        )
+    if keywords_match:
+        keywords_content = keywords_match.group(1).strip()
+        parts = keywords_content.split(",")
+        if parts:
+            title = parts[0].strip()
+
+    # 提取第一页内容（包含 p_key 解码内容）
+    content = _extract_yqxsc_page_content(html)
+
+    # 检测是否有分页: 查找 "下一页" 链接
+    next_page_match = re.search(r'href="(/xs_\d+/\d+/\d+/\d+)"[^>]*>下一页', html)
+    if next_page_match:
+        # 有分页，循环获取所有后续页面
+        parsed = urlparse(url)
+        base_url = f"{parsed.scheme}://{parsed.netloc}"
+        current_url = url
+
+        # 安全限制：最多获取 50 个分页，防止无限循环
+        for _ in range(50):
+            next_page_match = re.search(
+                r'href="(/xs_\d+/\d+/\d+/\d+)"[^>]*>下一页', html
+            )
+            if not next_page_match:
+                break
+
+            next_page_path = next_page_match.group(1)
+            next_page_url = base_url + next_page_path
+            try:
+                page_html = fetch_html(next_page_url, current_url)
+                page_content = _extract_yqxsc_page_content(page_html)
+                if page_content:
+                    content += "\n\n" + page_content
+                html = page_html  # 更新 html 用于检测下一页
+                current_url = next_page_url
+            except Exception as e:
+                print(f"获取分页 {next_page_url} 失败: {e}", file=sys.stderr)
+                break
 
     return {"title": title, "content": content}
 
@@ -497,6 +720,8 @@ def handle_command(command: dict) -> dict:
             html = fetch_html(url)
             if site == "boquge":
                 info = extract_boquge_info(html, url)
+            elif site == "yqxsc":
+                info = extract_yqxsc_info(html, url)
             else:
                 info = extract_info(html, url)
             result.update({"success": True, "info": info})
@@ -508,6 +733,8 @@ def handle_command(command: dict) -> dict:
             html = fetch_html(url, referer)
             if site == "boquge":
                 chapter = extract_boquge_chapter(html)
+            elif site == "yqxsc":
+                chapter = extract_yqxsc_chapter(html, url)
             else:
                 chapter = extract_chapter(html)
             result.update({"success": True, "chapter": chapter})

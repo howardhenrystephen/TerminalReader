@@ -163,7 +163,7 @@ func (m CrawlModel) Update(msg tea.Msg) (CrawlModel, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
-		m.progressBar.Width = 20
+		m.progressBar.Width = 50
 	case crawlProgressMsg:
 		m.progress = msg.Progress
 		m.currentCh = msg.CurrentCh

@@ -93,20 +93,15 @@ func (e *Engine) FindMissingChapters(bookID int64, database *db.DB) ([]MissingCh
 }
 
 // FindBestSourceForFill 为补充缺章找到最佳来源
-// 排除原始来源，要求书名完全匹配
-func (e *Engine) FindBestSourceForFill(ctx context.Context, bookTitle, excludeSource string) (Source, string, int, error) {
-	logger.Infof("[Crawler/FillMissing] 寻找最佳补充来源: book=%s, exclude=%s", bookTitle, excludeSource)
+// 在所有来源（包括原始来源）中搜索，按匹配分数选择最佳来源
+func (e *Engine) FindBestSourceForFill(ctx context.Context, bookTitle string) (Source, string, int, error) {
+	logger.Infof("[Crawler/FillMissing] 寻找最佳补充来源: book=%s", bookTitle)
 
 	var bestSource Source
 	var bestURL string
 	bestScore := -1
 
 	for _, src := range e.sources {
-		if src.Name() == excludeSource {
-			logger.Debugf("[Crawler/FillMissing] 跳过原始来源: %s", src.Name())
-			continue
-		}
-
 		// 搜索获取具体的URL
 		results, err := src.Search(ctx, bookTitle)
 		if err != nil {
@@ -227,7 +222,7 @@ func (e *Engine) FillSingleMissingChapter(ctx context.Context, bookID int64, cha
 	}
 
 	// 找到最佳补充来源
-	src, srcURL, _, err := e.FindBestSourceForFill(ctx, book.Title, book.SourceSite)
+	src, srcURL, _, err := e.FindBestSourceForFill(ctx, book.Title)
 	if err != nil {
 		logger.Errorf("[Crawler/FillMissing] 寻找补充来源失败: %v", err)
 		logs = append(logs, LogMessage{Level: LogError, Message: fmt.Sprintf("寻找补充来源失败: %v", err)})
@@ -448,7 +443,7 @@ func (e *Engine) FillMissingChapters(ctx context.Context, bookID int64, database
 	}
 
 	// 找到最佳补充来源
-	src, srcURL, _, err := e.FindBestSourceForFill(ctx, book.Title, book.SourceSite)
+	src, srcURL, _, err := e.FindBestSourceForFill(ctx, book.Title)
 	if err != nil {
 		logger.Errorf("[Crawler/FillMissing] 寻找补充来源失败: %v", err)
 		logs = append(logs, LogMessage{Level: LogError, Message: fmt.Sprintf("寻找补充来源失败: %v", err)})

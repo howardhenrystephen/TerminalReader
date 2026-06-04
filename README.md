@@ -41,9 +41,11 @@ A terminal-based novel reader TUI app built with [Bubble Tea](https://github.com
 
 ### Prerequisites
 
-- Python 3 + cloudscraper (for crawler proxy)
+- Python 3 + cloudscraper + beautifulsoup4 (for crawler proxy)
   ```bash
-  pip install cloudscraper
+  pip install cloudscraper beautifulsoup4
+  # or
+  python3 -m pip install cloudscraper beautifulsoup4
   ```
 
 ### Download Pre-built Binary

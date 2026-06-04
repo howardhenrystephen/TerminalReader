@@ -3,14 +3,53 @@ name: Release
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
 
 permissions:
   contents: write
 
 jobs:
-  build:
+  build-spider:
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+            arch: darwin-arm64
+            spider: spider
+          - os: ubuntu-latest
+            arch: linux-amd64
+            spider: spider
+          - os: ubuntu-24.04-arm
+            arch: linux-arm64
+            spider: spider
+          - os: windows-latest
+            arch: windows-amd64
+            spider: spider.exe
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python dependencies
+        run: pip install cloudscraper beautifulsoup4 pyinstaller
+
+      - name: Build spider binary
+        run: pyinstaller --onefile --name ${{ matrix.spider }} --distpath dist script/spider.py
+
+      - name: Upload spider artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: spider-${{ matrix.arch }}
+          path: dist/${{ matrix.spider }}
+
+  build-go:
     runs-on: ubuntu-latest
+    needs: build-spider
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -18,38 +57,44 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
+          go-version: "1.21"
 
       - name: Build all platforms
         run: make build-all
 
+      - name: Download all spider artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: spiders
+          pattern: spider-*
+
       - name: Package releases
         run: |
           mkdir -p release
-          # macOS Intel
-          mkdir -p dist/TerminalReader-darwin-amd64/script
+          # macOS Intel (use ARM64 spider, Rosetta 2 compatible)
+          mkdir -p dist/TerminalReader-darwin-amd64
           cp dist/reader-darwin-amd64 dist/TerminalReader-darwin-amd64/reader
-          cp script/spider.py dist/TerminalReader-darwin-amd64/script/
+          cp spiders/spider-darwin-arm64/spider dist/TerminalReader-darwin-amd64/spider || true
           tar czf release/TerminalReader-darwin-amd64.tar.gz -C dist TerminalReader-darwin-amd64
           # macOS ARM64
-          mkdir -p dist/TerminalReader-darwin-arm64/script
+          mkdir -p dist/TerminalReader-darwin-arm64
           cp dist/reader-darwin-arm64 dist/TerminalReader-darwin-arm64/reader
-          cp script/spider.py dist/TerminalReader-darwin-arm64/script/
+          cp spiders/spider-darwin-arm64/spider dist/TerminalReader-darwin-arm64/spider || true
           tar czf release/TerminalReader-darwin-arm64.tar.gz -C dist TerminalReader-darwin-arm64
           # Linux AMD64
-          mkdir -p dist/TerminalReader-linux-amd64/script
+          mkdir -p dist/TerminalReader-linux-amd64
           cp dist/reader-linux-amd64 dist/TerminalReader-linux-amd64/reader
-          cp script/spider.py dist/TerminalReader-linux-amd64/script/
+          cp spiders/spider-linux-amd64/spider dist/TerminalReader-linux-amd64/spider || true
           tar czf release/TerminalReader-linux-amd64.tar.gz -C dist TerminalReader-linux-amd64
           # Linux ARM64
-          mkdir -p dist/TerminalReader-linux-arm64/script
+          mkdir -p dist/TerminalReader-linux-arm64
           cp dist/reader-linux-arm64 dist/TerminalReader-linux-arm64/reader
-          cp script/spider.py dist/TerminalReader-linux-arm64/script/
+          cp spiders/spider-linux-arm64/spider dist/TerminalReader-linux-arm64/spider || true
           tar czf release/TerminalReader-linux-arm64.tar.gz -C dist TerminalReader-linux-arm64
           # Windows AMD64
-          mkdir -p dist/TerminalReader-windows-amd64/script
+          mkdir -p dist/TerminalReader-windows-amd64
           cp dist/reader-windows-amd64.exe dist/TerminalReader-windows-amd64/reader.exe
-          cp script/spider.py dist/TerminalReader-windows-amd64/script/
+          cp spiders/spider-windows-amd64/spider.exe dist/TerminalReader-windows-amd64/spider.exe || true
           cd dist && zip -r ../release/TerminalReader-windows-amd64.zip TerminalReader-windows-amd64
 
       - name: Create Release

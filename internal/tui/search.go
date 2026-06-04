@@ -295,13 +295,7 @@ func (m *SearchModel) StartSearch() tea.Cmd {
 	// 显示来源选择列表（带匹配度）
 	sourceItems := make([]list.Item, 0)
 	for _, name := range sourceNames {
-		displayName := name
-		if name == "爱下电子书" {
-			displayName = "源A"
-		} else if name == "笔趣阁" {
-			displayName = "源B"
-		}
-		sourceItems = append(sourceItems, SourceItem{name: displayName, matchScore: matchMap[name]})
+		sourceItems = append(sourceItems, SourceItem{name: name, matchScore: matchMap[name]})
 	}
 	m.step = stepSelectSource
 	m.results.SetItems(sourceItems)
@@ -319,13 +313,8 @@ func (m *SearchModel) SelectSource() tea.Cmd {
 		return nil
 	}
 
-	// 将显示名称映射回原始来源名称
+	// 选中的来源名称
 	m.selectedSource = item.name
-	if item.name == "源A" {
-		m.selectedSource = "爱下电子书"
-	} else if item.name == "源B" {
-		m.selectedSource = "笔趣阁"
-	}
 
 	logger.Debugf("[TUI/Search] 用户选择来源: %s", m.selectedSource)
 	m.isSearching = true

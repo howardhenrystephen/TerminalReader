@@ -26,7 +26,7 @@ func NewBoqugeSource() *BoqugeSource {
 }
 
 func (b *BoqugeSource) Name() string {
-	return "笔趣阁"
+	return "源C"
 }
 
 // spiderRequest 向 Python 爬虫发送请求（复用 ixdzs8 的辅助函数）
