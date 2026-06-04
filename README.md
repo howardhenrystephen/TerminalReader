@@ -2,6 +2,8 @@
 
 A terminal-based novel reader TUI app built with [Bubble Tea](https://github.com/charmbracelet/bubbletea). Search, download, manage and read web novels comfortably from the command line.
 
+![Demo](demo.gif)
+
 ![Go Version](https://img.shields.io/badge/go-%3E%3D1.21-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows-lightgrey)
