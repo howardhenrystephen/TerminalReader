@@ -22,20 +22,21 @@ var GlobalKeys = GlobalKeyMap{
 
 // BookshelfKeyMap 书架快捷键
 type BookshelfKeyMap struct {
-	Up        key.Binding
-	Down      key.Binding
-	Enter     key.Binding
-	Search    key.Binding
-	Delete    key.Binding
-	Refresh   key.Binding
-	GoTop     key.Binding
-	GoBottom  key.Binding
-	Desc      key.Binding
-	Pin       key.Binding
-	Redraw    key.Binding
-	Continue  key.Binding
-	StopCrawl key.Binding
-	Nuke      key.Binding
+	Up          key.Binding
+	Down        key.Binding
+	Enter       key.Binding
+	Search      key.Binding
+	Delete      key.Binding
+	Refresh     key.Binding
+	GoTop       key.Binding
+	GoBottom    key.Binding
+	Desc        key.Binding
+	Pin         key.Binding
+	Redraw      key.Binding
+	Continue    key.Binding
+	StopCrawl   key.Binding
+	Nuke        key.Binding
+	FillMissing key.Binding
 }
 
 // BookshelfKeys 书架快捷键实例
@@ -95,6 +96,10 @@ var BookshelfKeys = BookshelfKeyMap{
 	Nuke: key.NewBinding(
 		key.WithKeys("T"),
 		key.WithHelp("T", "clear all data"),
+	),
+	FillMissing: key.NewBinding(
+		key.WithKeys("f", "F"),
+		key.WithHelp("f", "fill missing"),
 	),
 }
 

@@ -387,3 +387,74 @@ func (d *DB) UpdateLastCrawledChapter(bookID int64, chapter int) error {
 	}
 	return err
 }
+
+// UpdateChapter 更新指定章节内容（用于补充缺章）
+func (d *DB) UpdateChapter(bookID int64, ch Chapter) error {
+	logger.Infof("[DB] 更新章节: bookID=%d, chapterNum=%d, title=%s", bookID, ch.ChapterNum, ch.Title)
+	sql := fmt.Sprintf("UPDATE %s SET title = ?, content = ?, source_url = ?, word_count = ? WHERE chapter_num = ?;", chapterTableName(bookID))
+	_, err := d.exec(sql, ch.Title, ch.Content, ch.SourceURL, ch.WordCount, ch.ChapterNum)
+	if err != nil {
+		logger.Errorf("[DB] 更新章节失败: bookID=%d, chapterNum=%d, %v", bookID, ch.ChapterNum, err)
+	}
+	return err
+}
+
+// FindMissingChapterNums 查找缺失的章节号（不连续的章节号）
+func (d *DB) FindMissingChapterNums(bookID int64) ([]int, error) {
+	logger.Debugf("[DB] 查找缺失章节号: bookID=%d", bookID)
+	sql := fmt.Sprintf(`
+		SELECT t1.chapter_num + 1 AS gap_start
+		FROM %s t1
+		LEFT JOIN %s t2 ON t2.chapter_num = t1.chapter_num + 1
+		WHERE t2.chapter_num IS NULL AND t1.chapter_num < (SELECT MAX(chapter_num) FROM %s)
+		ORDER BY gap_start;
+	`, chapterTableName(bookID), chapterTableName(bookID), chapterTableName(bookID))
+	rows, err := d.query(sql)
+	if err != nil {
+		logger.Errorf("[DB] 查找缺失章节号失败: bookID=%d, %v", bookID, err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var missing []int
+	for rows.Next() {
+		var num int
+		if err := rows.Scan(&num); err != nil {
+			return nil, err
+		}
+		missing = append(missing, num)
+	}
+	logger.Debugf("[DB] 找到 %d 个缺失章节号", len(missing))
+	return missing, rows.Err()
+}
+
+// GetChaptersWithPlaceholder 获取所有标记为"不存在"的章节
+func (d *DB) GetChaptersWithPlaceholder(bookID int64) ([]struct {
+	Num   int
+	Title string
+}, error) {
+	logger.Debugf("[DB] 获取占位章节: bookID=%d", bookID)
+	sql := fmt.Sprintf("SELECT chapter_num, title FROM %s WHERE title = '不存在' ORDER BY chapter_num;", chapterTableName(bookID))
+	rows, err := d.query(sql)
+	if err != nil {
+		logger.Errorf("[DB] 获取占位章节失败: bookID=%d, %v", bookID, err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var list []struct {
+		Num   int
+		Title string
+	}
+	for rows.Next() {
+		var item struct {
+			Num   int
+			Title string
+		}
+		if err := rows.Scan(&item.Num, &item.Title); err != nil {
+			return nil, err
+		}
+		list = append(list, item)
+	}
+	return list, rows.Err()
+}

@@ -31,6 +31,8 @@ const (
 	StateHelp
 	StateBookDesc
 	StateConfirmNuke
+	StateFillMissing
+	StateFillMissingProgress
 )
 
 // AppModel 应用主模型
@@ -44,6 +46,7 @@ type AppModel struct {
 	search        SearchModel
 	chapterPicker ChapterPickerModel
 	crawl         CrawlModel
+	fillMissing   FillMissingModel
 	help          HelpModel
 	toast         Toast
 	toastTimer    *time.Timer
@@ -62,6 +65,7 @@ func NewApp(database *db.DB, engine *crawler.Engine) AppModel {
 		search:        NewSearchModel(engine),
 		chapterPicker: NewChapterPickerModel(database),
 		crawl:         *NewCrawlModel(database, engine),
+		fillMissing:   *NewFillMissingModel(database, engine),
 		help:          NewHelpModel(),
 	}
 }
@@ -88,6 +92,8 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.chapterPicker.SetSize(msg.Width, msg.Height)
 		crawlModel, _ := m.crawl.Update(msg)
 		m.crawl = crawlModel
+		fillModel, _ := m.fillMissing.Update(msg)
+		m.fillMissing = fillModel
 		helpModel, _ := m.help.Update(msg)
 		m.help = helpModel
 		return m, nil
@@ -183,6 +189,25 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m.handleBookDescKeys(msg)
 		case StateConfirmNuke:
 			return m.handleConfirmNukeKeys(msg)
+		case StateFillMissing:
+			return m.handleFillMissingKeys(msg)
+		case StateFillMissingProgress:
+			if keyMatches(msg, keyWithKeys("esc")) {
+				logger.Infof("[TUI] 用户取消补充缺章")
+				m.fillMissing.Cancel()
+				m.state = StateBookshelf
+				bookshelf, _ := m.bookshelf.Update(ShowToastMsg{Content: "Fill cancelled", IsError: false})
+				m.bookshelf = bookshelf
+				return m, m.bookshelf.LoadBooks()
+			}
+			if keyMatches(msg, keyWithKeys("enter")) {
+				m.state = StateBookshelf
+				return m, m.bookshelf.LoadBooks()
+			}
+			if keyMatches(msg, GlobalKeys.Quit) {
+				return m, tea.Quit
+			}
+			return m, nil
 		}
 
 	case OpenBookMsg:
@@ -283,6 +308,56 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.prevState = m.state
 		m.state = StateBookDesc
 		m.bookshelf.updateDescContent()
+		return m, nil
+
+	case StartFillMissingMsg:
+		logger.Infof("[TUI] 开始补充缺章: %s", msg.Book.Title)
+		m.prevState = m.state
+		m.state = StateFillMissing
+		m.fillMissing.Start(msg.Book)
+		return m, nil
+
+	case fillMissingProgressMsg:
+		fillModel, cmd := m.fillMissing.Update(msg)
+		m.fillMissing = fillModel
+		return m, cmd
+
+	case fillMissingDoneMsg:
+		fillModel, cmd := m.fillMissing.Update(msg)
+		m.fillMissing = fillModel
+		wasBackground := m.state == StateBackgroundCrawling
+		var cmds []tea.Cmd
+		if msg.Progress.Error != nil {
+			logger.Errorf("[TUI] 补充缺章失败: %v", msg.Progress.Error)
+			if wasBackground {
+				bookshelf, _ := m.bookshelf.Update(ShowToastMsg{Content: "Fill failed: " + msg.Progress.Error.Error(), IsError: true})
+				m.bookshelf = bookshelf
+				m.state = StateBookshelf
+				cmds = append(cmds, m.bookshelf.LoadBooks())
+			} else {
+				m.state = StateFillMissingProgress
+			}
+		} else {
+			logger.Infof("[TUI] 补充缺章完成")
+			if msg.Progress.Result != nil {
+				result := msg.Progress.Result
+				if wasBackground {
+					bookshelf, _ := m.bookshelf.Update(ShowToastMsg{Content: fmt.Sprintf("Filled %d, failed %d", result.FilledCount, result.FailedCount), IsError: result.FilledCount == 0})
+					m.bookshelf = bookshelf
+					m.state = StateBookshelf
+					cmds = append(cmds, m.bookshelf.LoadBooks())
+				} else {
+					m.state = StateFillMissingProgress
+				}
+			}
+		}
+		return m, tea.Batch(append(cmds, cmd)...)
+
+	case fillMissingHideMsg:
+		if m.state == StateFillMissingProgress {
+			m.state = StateBookshelf
+			return m, m.bookshelf.LoadBooks()
+		}
 		return m, nil
 
 	case ContinueCrawlMsg:
@@ -398,6 +473,8 @@ func (m AppModel) View() string {
 		content = m.bookshelf.ViewDescFull(m.width, m.height)
 	case StateConfirmNuke:
 		content = m.viewConfirmNuke()
+	case StateFillMissing, StateFillMissingProgress:
+		content = m.fillMissing.View()
 	}
 
 	// 叠加 Toast（非书架状态下）
@@ -505,10 +582,46 @@ func (m AppModel) handleBookshelfKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.bookshelf = bookshelf
 		return m, nil
 	}
+	if keyMatches(msg, BookshelfKeys.FillMissing) {
+		book := m.bookshelf.SelectedBook()
+		if book == nil {
+			return m, nil
+		}
+		// 检查是否有缺章
+		missing, err := m.engine.FindMissingChapters(book.ID, m.db)
+		if err != nil {
+			logger.Warnf("[TUI] 查找缺章失败: %v", err)
+			bookshelf, _ := m.bookshelf.Update(ShowToastMsg{Content: "Failed to find missing chapters", IsError: true})
+			m.bookshelf = bookshelf
+			return m, nil
+		}
+		if len(missing) == 0 {
+			bookshelf, _ := m.bookshelf.Update(ShowToastMsg{Content: "No missing chapters", IsError: false})
+			m.bookshelf = bookshelf
+			return m, nil
+		}
+		logger.Infof("[TUI] 请求补充缺章: %s, 缺章数=%d", book.Title, len(missing))
+		return m, func() tea.Msg {
+			return StartFillMissingMsg{Book: book}
+		}
+	}
 
 	bookshelf, cmd := m.bookshelf.Update(msg)
 	m.bookshelf = bookshelf
 	return m, cmd
+}
+
+func (m AppModel) handleFillMissingKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	if keyMatches(msg, keyWithKeys("enter")) {
+		logger.Infof("[TUI] 确认补充缺章")
+		m.state = StateFillMissingProgress
+		return m, m.fillMissing.fillMissingCmd()
+	}
+	if keyMatches(msg, keyWithKeys("esc")) {
+		m.state = StateBookshelf
+		return m, nil
+	}
+	return m, nil
 }
 
 func (m AppModel) handleBookDescKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {

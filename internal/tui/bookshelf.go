@@ -176,6 +176,7 @@ func (m BookshelfModel) ViewWithMini(miniView string) string {
 		{key: "enter/l/o", desc: "open"},
 		{key: "s//", desc: "search"},
 		{key: "c/t", desc: "continue"},
+		{key: "f", desc: "fill missing"},
 		{key: "d/x", desc: "delete"},
 		{key: "tab/i", desc: "desc"},
 		{key: "p", desc: "pin"},
