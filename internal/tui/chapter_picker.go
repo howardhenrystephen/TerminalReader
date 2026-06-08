@@ -192,6 +192,26 @@ func (m *ChapterPickerModel) SetSize(width, height int) {
 	m.list.SetSize(58, height-10)
 }
 
+// VisibleItemCount 返回当前列表可见的条目数量
+// 每个条目占2行（1行内容 + 1行间距），据此计算
+func (m ChapterPickerModel) VisibleItemCount() int {
+	boxHeight := m.height - 4
+	if boxHeight < 10 {
+		boxHeight = 10
+	}
+	fixedTopHeight := 2 // Title(1) + footer(1)
+	listHeight := boxHeight - fixedTopHeight
+	if listHeight < 3 {
+		listHeight = 3
+	}
+	// 每个条目占2行高度
+	visible := listHeight / 2
+	if visible < 1 {
+		visible = 1
+	}
+	return visible
+}
+
 func newChapterDelegate() list.DefaultDelegate {
 	d := list.NewDefaultDelegate()
 	// 禁用 Description 渲染，实现单行显示

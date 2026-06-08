@@ -918,9 +918,10 @@ func (m AppModel) handleChapterPickerKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			return m, m.reader.loadChapterCmd(chNum)
 		}
 	}
-	// ←/→ 翻页：一次滚动8个条目
+	// ←/→ 翻页：根据当前可见章节数动态计算翻页跨度
+	pageSize := m.chapterPicker.VisibleItemCount()
 	if keyMatches(msg, ChapterPickerKeys.PageUp) {
-		idx := m.chapterPicker.list.Index() - 8
+		idx := m.chapterPicker.list.Index() - pageSize
 		if idx < 0 {
 			idx = 0
 		}
@@ -928,7 +929,7 @@ func (m AppModel) handleChapterPickerKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 	if keyMatches(msg, ChapterPickerKeys.PageDown) {
-		idx := m.chapterPicker.list.Index() + 8
+		idx := m.chapterPicker.list.Index() + pageSize
 		maxIdx := len(m.chapterPicker.list.Items()) - 1
 		if maxIdx < 0 {
 			maxIdx = 0
